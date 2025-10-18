@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini WhatsApp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="login-screen">
+    <h2>Entrar</h2>
+    <input type="email" id="email" placeholder="E-mail">
+    <input type="password" id="password" placeholder="Senha">
+    <button id="login-btn">Entrar</button>
+    <button id="register-btn">Cadastrar</button>
+  </div>
+
+  <div id="chat-screen" style="display:none;">
+    <header>
+      <h3 id="user-name"></h3>
+      <button id="logout-btn">Sair</button>
+    </header>
+    <div id="messages"></div>
+    <footer>
+      <input type="text" id="message-input" placeholder="Digite uma mensagem...">
+      <button id="send-btn">Enviar</button>
+    </footer>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
