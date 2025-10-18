@@ -1,64 +1,102 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini WhatsApp</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini WhatsApp - Single File</title>
   <style>
-    body { font-family: Arial; background: #f2f2f2; margin: 0; }
-    #app { display: flex; height: 100vh; }
-    #userList { width: 30%; background: #fff; border-right: 1px solid #ccc; overflow-y: auto; }
-    #chatArea { flex: 1; display: flex; flex-direction: column; }
-    .user { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
-    .user:hover { background: #f9f9f9; }
-    #messages { flex: 1; padding: 10px; overflow-y: auto; background: #e9ecef; }
-    .message { margin: 5px 0; padding: 8px 10px; border-radius: 10px; max-width: 70%; }
-    .sent { background: #DCF8C6; align-self: flex-end; }
-    .received { background: #fff; align-self: flex-start; }
-    #inputArea { display: flex; padding: 10px; background: #fff; border-top: 1px solid #ccc; }
-    #inputArea input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; }
-    #inputArea button { margin-left: 10px; padding: 10px 15px; border: none; background: #25D366; color: #fff; border-radius: 20px; cursor: pointer; }
+    body { font-family: Arial, sans-serif; margin:0; background:#f2f2f2; }
+    .container { display:flex; height:100vh; }
+    .left { width:300px; background:#fff; border-right:1px solid #ddd; padding:12px; box-sizing:border-box; overflow:auto; }
+    .right { flex:1; display:flex; flex-direction:column; padding:12px; box-sizing:border-box; }
+    h2 { margin:6px 0 12px 0; font-size:18px; }
+    .field { display:flex; gap:6px; margin-bottom:8px; }
+    input[type="email"], input[type="password"], input[type="text"] { width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; }
+    button { padding:8px 12px; border-radius:8px; border:0; background:#25D366; color:white; cursor:pointer; }
+    .contact { padding:10px; border-bottom:1px solid #eee; cursor:pointer; }
+    .contact:hover { background:#f9f9f9; }
+    #messages { flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:6px; background:#e9ecef; border-radius:6px; }
+    .message { max-width:70%; padding:8px 10px; border-radius:10px; }
+    .sent { align-self:flex-end; background:#DCF8C6; }
+    .received { align-self:flex-start; background:#fff; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+    .small { font-size:13px; color:#666; }
+    .login-box { display:flex; flex-direction:column; gap:8px; }
+    footer { display:flex; gap:8px; margin-top:8px; }
   </style>
 </head>
-
-  
 <body>
-  <div id="login-screen">
-    <h2>Mini WhatsApp</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Senha">
-    <button id="login-btn">Entrar</button>
-    <button id="register-btn">Cadastrar</button>
-  </div>
+  <div class="container">
+    <div class="left">
+      <h2>Mini WhatsApp</h2>
 
-  <div id="chat-screen" style="display:none;">
-    <div>
-      <span id="user-name"></span>
-      <button id="logout-btn">Sair</button>
+      <div id="auth-area">
+        <div class="login-box">
+          <input id="email" type="email" placeholder="E-mail" />
+          <input id="password" type="password" placeholder="Senha" />
+          <div style="display:flex; gap:8px;">
+            <button id="login-btn">Entrar</button>
+            <button id="register-btn" style="background:#0066cc">Cadastrar</button>
+          </div>
+          <div class="small" style="margin-top:8px;">
+            <strong>Debug:</strong>
+            <div id="debug-auth" style="white-space:pre-wrap; font-size:12px; margin-top:6px; color:#333;"></div>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>Contatos</strong>
+          <button id="refresh-contacts" style="background:#888">Atualizar</button>
+        </div>
+        <div id="contacts" style="margin-top:8px;"></div>
+      </div>
+
     </div>
-    <h3>Contatos</h3>
-    <div id="contacts"></div>
 
-    <h3 id="chat-header">Nenhum chat aberto</h3>
-    <div id="messages" style="border:1px solid #ccc; height:300px; overflow-y:auto;"></div>
+    <div class="right">
+      <div class="topbar">
+        <div>
+          <div id="user-name" style="font-weight:600">Desconectado</div>
+          <div id="user-status" class="small">Nenhuma sessão</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="logout-btn" style="background:#e74c3c">Sair</button>
+        </div>
+      </div>
 
-    <input id="message-input" placeholder="Digite uma mensagem...">
-    <button id="send-btn">Enviar</button>
+      <div id="chat-pane" style="display:block">
+        <div id="chat-header" style="font-weight:600; margin-bottom:8px;">Nenhum chat aberto</div>
+        <div id="messages"></div>
+
+        <div style="margin-top:8px;">
+          <div style="display:flex; gap:8px;">
+            <input id="message-input" type="text" placeholder="Digite uma mensagem..." />
+            <button id="send-btn">Enviar</button>
+          </div>
+          <div id="debug-log" class="small" style="margin-top:8px; color:#333; white-space:pre-wrap;"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <script type="module" src="script.js"></script>
-</body>
-  <!-- Firebase SDK -->
+  <!-- Script Firebase e app -->
   <script type="module">
+    // ---- IMPORTS ----
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where 
+    import {
+      getFirestore, collection, doc, setDoc, addDoc, getDocs,
+      onSnapshot, query, where, orderBy, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { 
-      getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword 
+    import {
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signOut, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    // ✅ Sua configuração Firebase
+    // ---- SUA CONFIGURAÇÃO FIREBASE ----
     const firebaseConfig = {
       apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
       authDomain: "cursos-6f950.firebaseapp.com",
@@ -70,107 +108,218 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth();
+    const auth = getAuth(app);
 
+    // ---- ELEMENTOS ----
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+    const loginBtn = document.getElementById("login-btn");
+    const registerBtn = document.getElementById("register-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const contactsDiv = document.getElementById("contacts");
+    const messagesDiv = document.getElementById("messages");
+    const userNameEl = document.getElementById("user-name");
+    const userStatusEl = document.getElementById("user-status");
+    const chatHeader = document.getElementById("chat-header");
+    const sendBtn = document.getElementById("send-btn");
+    const msgInput = document.getElementById("message-input");
+    const debugAuth = document.getElementById("debug-auth");
+    const debugLog = document.getElementById("debug-log");
+    const refreshContactsBtn = document.getElementById("refresh-contacts");
+
+    // ---- ESTADO ----
     let currentUser = null;
     let selectedUser = null;
+    let unsubscribeMessages = null;
+    let contactsUnsub = null;
+    let usersSnapshotUnsub = null;
 
-    // 🔹 Login automático simples (para testes)
-    const email = prompt("Digite seu email:");
-    const password = "123456"; // senha padrão só pra teste
+    // ---- HELPERS ----
+    function logDebugAuth(txt) {
+      console.log(txt);
+      debugAuth.textContent = txt;
+    }
+    function log(txt) {
+      console.log(txt);
+      debugLog.textContent = (new Date().toLocaleTimeString()) + " — " + txt + "\\n" + debugLog.textContent;
+    }
 
-    signInWithEmailAndPassword(auth, email, password)
-      .catch(async (err) => {
-        await createUserWithEmailAndPassword(auth, email, password);
-      });
+    // ---- AUTENTICAÇÃO ----
+    registerBtn.onclick = async () => {
+      const email = emailEl.value.trim();
+      const pass = passEl.value.trim();
+      if (!email || !pass) return alert("Preencha email e senha.");
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        // cria/atualiza o documento do usuário com o UID como id
+        await setDoc(doc(db, "users", cred.user.uid), {
+          uid: cred.user.uid,
+          email: cred.user.email,
+          createdAt: serverTimestamp()
+        });
+        logDebugAuth("Usuário cadastrado: " + cred.user.email);
+      } catch (err) {
+        logDebugAuth("Erro no cadastro: " + err.message);
+      }
+    };
 
-    onAuthStateChanged(auth, (user) => {
+    loginBtn.onclick = async () => {
+      const email = emailEl.value.trim();
+      const pass = passEl.value.trim();
+      if (!email || !pass) return alert("Preencha email e senha.");
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        logDebugAuth("Tentando login: " + email);
+      } catch (err) {
+        logDebugAuth("Erro no login: " + err.message);
+      }
+    };
+
+    logoutBtn.onclick = async () => {
+      await signOut(auth);
+      log("Desconectado");
+    };
+
+    // ---- OBSERVAR SESSÃO ----
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
-        loadUsers();
+        userNameEl.textContent = user.email;
+        userStatusEl.textContent = "Conectado (uid: " + user.uid + ")";
+        log("Sessão iniciada: " + user.email + " (" + user.uid + ")");
+        await ensureUserDoc(user);
+        startContactsListener();
+      } else {
+        currentUser = null;
+        userNameEl.textContent = "Desconectado";
+        userStatusEl.textContent = "Nenhuma sessão";
+        contactsDiv.innerHTML = "";
+        messagesDiv.innerHTML = "";
+        chatHeader.textContent = "Nenhum chat aberto";
+        log("Sessão encerrada");
+        // desmonta listeners se existirem
+        if (contactsUnsub) contactsUnsub();
+        if (unsubscribeMessages) unsubscribeMessages();
       }
     });
 
-    // 🔹 Carregar usuários
-    async function loadUsers() {
-      const q = query(collection(db, "users"));
-      onSnapshot(q, (snapshot) => {
-        const listDiv = document.getElementById("userList");
-        listDiv.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.uid !== currentUser.uid) {
-            const div = document.createElement("div");
-            div.classList.add("user");
-            div.textContent = data.email;
-            div.onclick = () => openChat(data.uid, data.email);
-            listDiv.appendChild(div);
-          }
+    // Garante que exista documento user/{uid}
+    async function ensureUserDoc(user) {
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email,
+          lastSeen: serverTimestamp()
+        }, { merge:true });
+        log("Documento do usuário garantido no Firestore.");
+      } catch (err) {
+        log("Erro ao garantir doc user: " + err.message);
+      }
+    }
+
+    // ---- CARREGAR / OUVIR CONTATOS ----
+    function startContactsListener() {
+      const usersCol = collection(db, "users");
+      // usa onSnapshot para atualizar automaticamente
+      usersSnapshotUnsub = onSnapshot(usersCol, (snapshot) => {
+        contactsDiv.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          // pula o próprio usuário
+          if (!data || data.uid === currentUser.uid) return;
+          const div = document.createElement("div");
+          div.className = "contact";
+          div.textContent = data.email + " (" + (data.uid || "no-uid") + ")";
+          div.onclick = () => {
+            openChat(data.uid, data.email);
+          };
+          contactsDiv.appendChild(div);
         });
+      }, (err) => {
+        log("Erro ao escutar users: " + err.message);
       });
     }
 
-    // 🔹 Criar registro do usuário
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-      const userRef = collection(db, "users");
-      const q = query(userRef, where("uid", "==", user.uid));
-      onSnapshot(q, (snap) => {
-        if (snap.empty) {
-          addDoc(userRef, { uid: user.uid, email: user.email });
-        }
-      });
-    });
+    refreshContactsBtn.onclick = () => {
+      if (usersSnapshotUnsub) usersSnapshotUnsub(); // reinicia para forçar
+      startContactsListener();
+    };
 
-    // 🔹 Abrir conversa
+    // ---- ABRIR CHAT ----
     function openChat(uid, email) {
+      if (!currentUser) return alert("Faça login primeiro.");
       selectedUser = { uid, email };
-      document.getElementById("messages").innerHTML = "";
-      loadMessages();
-    }
+      chatHeader.textContent = "Conversando com: " + email;
+      messagesDiv.innerHTML = "";
+      log("Abrindo chat com " + email + " (" + uid + ")");
 
-    // 🔹 Carregar mensagens em tempo real
-    function loadMessages() {
-      if (!selectedUser) return;
-      const msgsRef = collection(db, "messages");
-      const q = query(
-        msgsRef,
-        where("participants", "array-contains", currentUser.uid),
-        orderBy("timestamp")
-      );
-      onSnapshot(q, (snapshot) => {
-        const messagesDiv = document.getElementById("messages");
+      // desmonta listener anterior
+      if (unsubscribeMessages) unsubscribeMessages();
+
+      // query: todas mensagens onde currentUser é participante, ordenadas por timestamp
+      const msgsCol = collection(db, "messages");
+      const q = query(msgsCol, where("participants", "array-contains", currentUser.uid), orderBy("timestamp"));
+
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        // limpamos e renderizamos apenas as mensagens entre os dois usuários
         messagesDiv.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const msg = doc.data();
+        snapshot.forEach((docSnap) => {
+          const m = docSnap.data();
+          if (!m) return;
+          // só renderiza mensagens entre currentUser e selectedUser
           if (
-            (msg.from === currentUser.uid && msg.to === selectedUser.uid) ||
-            (msg.from === selectedUser.uid && msg.to === currentUser.uid)
+            (m.from === currentUser.uid && m.to === selectedUser.uid) ||
+            (m.from === selectedUser.uid && m.to === currentUser.uid)
           ) {
-            const div = document.createElement("div");
-            div.classList.add("message");
-            div.classList.add(msg.from === currentUser.uid ? "sent" : "received");
-            div.textContent = msg.text;
-            messagesDiv.appendChild(div);
+            const el = document.createElement("div");
+            el.className = "message " + (m.from === currentUser.uid ? "sent" : "received");
+            el.textContent = m.text + (m.timestamp ? "" : " (sem timestamp)");
+            messagesDiv.appendChild(el);
           }
         });
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        log("Mensagens atualizadas. Total visível: " + messagesDiv.children.length);
+      }, (err) => {
+        log("Erro ao escutar mensagens: " + err.message);
       });
     }
 
-    // 🔹 Enviar mensagem
-    document.getElementById("sendBtn").onclick = async () => {
-      const text = document.getElementById("messageInput").value.trim();
-      if (!text || !selectedUser) return;
-      await addDoc(collection(db, "messages"), {
-        from: currentUser.uid,
-        to: selectedUser.uid,
-        text,
-        participants: [currentUser.uid, selectedUser.uid],
-        timestamp: serverTimestamp(),
-      });
-      document.getElementById("messageInput").value = "";
+    // ---- ENVIAR MENSAGEM ----
+    sendBtn.onclick = async () => {
+      const text = msgInput.value.trim();
+      if (!currentUser) return alert("Faça login primeiro.");
+      if (!selectedUser) return alert("Selecione um contato.");
+      if (!text) return;
+      try {
+        await addDoc(collection(db, "messages"), {
+          from: currentUser.uid,
+          to: selectedUser.uid,
+          text,
+          participants: [currentUser.uid, selectedUser.uid],
+          timestamp: serverTimestamp()
+        });
+        msgInput.value = "";
+        log("Mensagem enviada para " + selectedUser.email);
+      } catch (err) {
+        log("Erro ao enviar: " + err.message);
+        alert("Erro ao enviar mensagem: " + err.message);
+      }
     };
+
+    // ---- DEBUG: mostrar estrutura existente rapidamente ----
+    window._dump = async () => {
+      const snaps = await getDocs(collection(db, "messages"));
+      console.log("Todas mensagens:", snaps.size);
+      snaps.forEach(d => console.log(d.id, d.data()));
+      const us = await getDocs(collection(db, "users"));
+      console.log("Todos users:", us.size);
+      us.forEach(d => console.log(d.id, d.data()));
+    };
+
+    // notas finais
+    log("App carregado. Verifique o console para detalhes.");
+    logDebugAuth("Pronto. Insira email e senha para entrar ou cadastrar.");
+
   </script>
 </body>
-  </html>
+            </html>
