@@ -21,29 +21,31 @@ const userNameEl = document.getElementById("user-name");
 
 let currentUser = null;
 
-// === Login / Registro ===
+// === Cadastro ===
 registerBtn.onclick = async () => {
   try {
     await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-    alert("Usuário cadastrado!");
+    alert("Usuário cadastrado com sucesso!");
   } catch (err) {
-    alert(err.message);
+    alert("Erro: " + err.message);
   }
 };
 
+// === Login ===
 loginBtn.onclick = async () => {
   try {
     await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
   } catch (err) {
-    alert(err.message);
+    alert("Erro: " + err.message);
   }
 };
 
+// === Logout ===
 logoutBtn.onclick = async () => {
   await signOut(auth);
 };
 
-// === Estado da sessão ===
+// === Monitorar sessão ===
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
@@ -85,4 +87,4 @@ function listenMessages() {
     });
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
-}
+  }
