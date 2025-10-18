@@ -2,21 +2,40 @@ body {
   font-family: Arial, sans-serif;
   background: #e5ddd5;
   margin: 0;
-  padding: 0;
 }
 
-#chat-screen {
+#chat-container {
+  display: flex;
+  height: 90vh;
+}
+
+#contacts {
+  width: 30%;
+  background: #fff;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+}
+
+.contact {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+.contact:hover {
+  background: #f0f0f0;
+}
+
+#chat-area {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
 }
 
-header {
+#chat-header {
   background: #075E54;
   color: white;
   padding: 10px;
-  display: flex;
-  justify-content: space-between;
+  font-weight: bold;
 }
 
 #messages {
@@ -53,8 +72,8 @@ footer {
 footer input {
   flex: 1;
   padding: 8px;
-  border: 1px solid #ccc;
   border-radius: 5px;
+  border: 1px solid #ccc;
 }
 footer button {
   margin-left: 10px;
