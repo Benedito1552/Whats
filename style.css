@@ -24,6 +24,8 @@ header {
   padding: 10px;
   overflow-y: auto;
   background: #ECE5DD;
+  display: flex;
+  flex-direction: column;
 }
 
 .message {
@@ -61,4 +63,4 @@ footer button {
   border: none;
   border-radius: 5px;
   color: white;
-}
+  }
