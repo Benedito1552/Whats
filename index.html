@@ -57,17 +57,16 @@ button { padding: 10px 20px; background: #25d366; color: white; border: none; bo
     </div>
   </div>
 </div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, arrayUnion, onSnapshot, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, arrayUnion, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
   authDomain: "cursos-6f950.firebaseapp.com",
   projectId: "cursos-6f950",
-  storageBucket: "cursos-6f950.firebasestorage.app",
+  storageBucket: "cursos-6f950.appspot.com",
   messagingSenderId: "146131122545",
   appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
 };
@@ -86,6 +85,7 @@ const messagesDiv = document.getElementById("messages");
 const chatHeader = document.getElementById("chat-header");
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
+const nameInput = document.getElementById("name");
 const loginBtn = document.getElementById("login-btn");
 const registerBtn = document.getElementById("register-btn");
 const logoutBtn = document.getElementById("logout-btn");
@@ -100,12 +100,27 @@ const searchInput = document.getElementById("search-contacts");
 registerBtn.onclick = async () => {
   try {
     const userCred = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-    await setDoc(doc(db, "users", userCred.user.uid), { email: userCred.user.email, uid: userCred.user.uid, createdAt: new Date() });
+    await setDoc(doc(db, "users", userCred.user.uid), {
+      email: userCred.user.email,
+      uid: userCred.user.uid,
+      name: nameInput.value,
+      createdAt: new Date()
+    });
     alert("Usuário cadastrado com sucesso!");
-  } catch (err) { alert(err.message); }
+  } catch (err) {
+    alert(err.message);
+  }
 };
-loginBtn.onclick = async () => { try { await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value); } catch (err) { alert(err.message); } };
-logoutBtn.onclick = async () => { await signOut(auth); };
+loginBtn.onclick = async () => {
+  try {
+    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+  } catch (err) {
+    alert(err.message);
+  }
+};
+logoutBtn.onclick = async () => {
+  await signOut(auth);
+};
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -113,7 +128,7 @@ onAuthStateChanged(auth, (user) => {
     loginScreen.style.display = "none";
     chatScreen.style.display = "block";
     userNameEl.textContent = user.email;
-    loadContacts();
+    loadContacts("");
   } else {
     currentUser = null;
     chatScreen.style.display = "none";
@@ -121,14 +136,14 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// === Carregar contatos com avatar e notificação ===
-async function loadContacts() {
+// === Carregar contatos com filtro ===
+async function loadContacts(filter) {
   const snapshot = await getDocs(collection(db, "users"));
   contactsDiv.innerHTML = "";
   snapshot.forEach(docSnap => {
     const user = docSnap.data();
-    if (user.email !== currentUser.email) {
-
+    const displayName = (user.name || user.email).toLowerCase();
+    if (user.email !== currentUser.email && displayName.includes(filter.toLowerCase())) {
       const div = document.createElement("div");
       div.classList.add("contact");
 
@@ -137,12 +152,12 @@ async function loadContacts() {
 
       const avatar = document.createElement("div");
       avatar.classList.add("contact-avatar");
-      avatar.textContent = user.email[0].toUpperCase();
-      avatar.style.backgroundColor = stringToColor(user.email);
+      avatar.textContent = displayName[0].toUpperCase();
+      avatar.style.backgroundColor = stringToColor(displayName);
 
       const name = document.createElement("span");
       name.classList.add("contact-name");
-      name.textContent = user.email;
+      name.textContent = user.name || user.email;
 
       const notif = document.createElement("span");
       notif.classList.add("notification");
@@ -162,7 +177,12 @@ async function loadContacts() {
   });
 }
 
-// === Monitorar mensagens para notificação ===
+// === Busca dinâmica ===
+searchInput.addEventListener("input", () => {
+  loadContacts(searchInput.value);
+});
+
+// === Monitorar mensagens ===
 function monitorUnreadMessages(otherUid, notifEl, otherEmail) {
   const chatId = getChatId(currentUser.uid, otherUid);
   const chatRef = doc(db, "chats", chatId);
@@ -178,26 +198,39 @@ function monitorUnreadMessages(otherUid, notifEl, otherEmail) {
       if ("Notification" in window && Notification.permission === "granted") {
         const lastMsg = unreadMsgs[unreadMsgs.length - 1].text;
         const preview = lastMsg.length > 50 ? lastMsg.substring(0, 50) + "…" : lastMsg;
-        new Notification("Nova mensagem de " + otherEmail, { body: preview, icon: "https://cdn-icons-png.flaticon.com/512/124/124034.png" });
+        new Notification("Nova mensagem de " + otherEmail, {
+          body: preview,
+          icon: "https://cdn-icons-png.flaticon.com/512/124/124034.png"
+        });
       }
     }
   });
 }
 
-// === Abrir chat modal ===
+// === Abrir chat ===
 function openChatModal(user, contactDiv) {
   selectedContact = user;
-  chatHeader.textContent = "Conversando com: " + user.email;
+  chatHeader.textContent = "Conversando com: " + (user.name || user.email);
   chatModal.style.display = "block";
   messagesDiv.innerHTML = "";
   contactDiv.querySelector(".notification").style.display = "none";
   listenMessages(user);
 }
 
-closeModal.onclick = () => { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; };
-window.onclick = (event) => { if (event.target === chatModal) { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; } };
+closeModal.onclick = () => {
+  chatModal.style.display = "none";
+  if (unsubscribeMessages) unsubscribeMessages();
+  selectedContact = null;
+};
+window.onclick = (event) => {
+  if (event.target === chatModal) {
+    chatModal.style.display = "none";
+    if (unsubscribeMessages) unsubscribeMessages();
+    selectedContact = null;
+  }
+};
 
-// === Escutar mensagens em tempo real ===
+// === Escutar mensagens ===
 function listenMessages(user) {
   if (unsubscribeMessages) unsubscribeMessages();
   const chatId = getChatId(currentUser.uid, user.uid);
@@ -230,26 +263,32 @@ sendBtn.onclick = async () => {
   const chatSnap = await getDoc(chatRef);
   if (!chatSnap.exists()) await setDoc(chatRef, { messages: [] });
 
-  await updateDoc(chatRef, { messages: arrayUnion({ from: currentUser.uid, text, timestamp: new Date() }) });
+  await updateDoc(chatRef, {
+    messages: arrayUnion({ from: currentUser.uid, text, timestamp: new Date() })
+  });
   msgInput.value = "";
 };
 
-// === Funções utilitárias ===
-function getChatId(uid1, uid2) { return [uid1, uid2].sort().join("_"); }
-function stringToColor(str) { let hash = 0; for (let i=0;i<str.length;i++) hash = str.charCodeAt(i) + ((hash<<5)-hash); let color="#"; for(let i=0;i<3;i++){ const val=(hash>>(i*8))&0xFF; color+=('00'+val.toString(16)).substr(-2);} return color; }
-
-// === Pesquisa de contatos ===
-searchInput.addEventListener("input", () => {
-  const filter = searchInput.value.toLowerCase();
-  const contactDivs = contactsDiv.querySelectorAll(".contact");
-  contactDivs.forEach(div => {
-    const name = div.querySelector(".contact-name").textContent.toLowerCase();
-    div.style.display = name.includes(filter) ? "flex" : "none";
-  });
-});
+// === Utilitários ===
+function getChatId(uid1, uid2) {
+  return [uid1, uid2].sort().join("_");
+}
+function stringToColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  let color = "#";
+  for (let i = 0; i < 3; i++) {
+    const val = (hash >> (i * 8)) & 0xFF;
+    color += ("00" + val.toString(16)).slice(-2);
+  }
+  return color;
+}
 
 // === Solicitar permissão para notificações ===
-if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
 </script>
+ 
 </body>
 </html>
