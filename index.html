@@ -2,42 +2,159 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Mini WhatsApp - Versão 2</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini WhatsApp</title>
+  <style>
+    body { font-family: Arial; background: #f2f2f2; margin: 0; }
+    #app { display: flex; height: 100vh; }
+    #userList { width: 30%; background: #fff; border-right: 1px solid #ccc; overflow-y: auto; }
+    #chatArea { flex: 1; display: flex; flex-direction: column; }
+    .user { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+    .user:hover { background: #f9f9f9; }
+    #messages { flex: 1; padding: 10px; overflow-y: auto; background: #e9ecef; }
+    .message { margin: 5px 0; padding: 8px 10px; border-radius: 10px; max-width: 70%; }
+    .sent { background: #DCF8C6; align-self: flex-end; }
+    .received { background: #fff; align-self: flex-start; }
+    #inputArea { display: flex; padding: 10px; background: #fff; border-top: 1px solid #ccc; }
+    #inputArea input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; }
+    #inputArea button { margin-left: 10px; padding: 10px 15px; border: none; background: #25D366; color: #fff; border-radius: 20px; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <!-- Tela de login -->
-  <div id="login-screen">
-    <h2>Entrar</h2>
-    <input type="email" id="email" placeholder="E-mail">
-    <input type="password" id="password" placeholder="Senha">
-    <button id="login-btn">Entrar</button>
-    <button id="register-btn">Cadastrar</button>
-  </div>
-
-  <!-- Tela de chat -->
-  <div id="chat-screen" style="display:none;">
-    <header>
-      <h3 id="user-name"></h3>
-      <button id="logout-btn">Sair</button>
-    </header>
-    
-    <div id="chat-container">
-      <!-- Lista de contatos -->
-      <aside id="contacts"></aside>
-      
-      <!-- Área do chat -->
-      <main id="chat-area">
-        <div id="chat-header">Selecione um contato</div>
-        <div id="messages"></div>
-        <footer>
-          <input type="text" id="message-input" placeholder="Digite...">
-          <button id="send-btn">Enviar</button>
-        </footer>
-      </main>
+  <div id="app">
+    <div id="userList"></div>
+    <div id="chatArea">
+      <div id="messages"></div>
+      <div id="inputArea">
+        <input type="text" id="messageInput" placeholder="Digite uma mensagem..." />
+        <button id="sendBtn">Enviar</button>
+      </div>
     </div>
   </div>
 
-  <script type="module" src="script.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { 
+      getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, where 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { 
+      getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // ✅ Sua configuração Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
+      authDomain: "cursos-6f950.firebaseapp.com",
+      projectId: "cursos-6f950",
+      storageBucket: "cursos-6f950.firebasestorage.app",
+      messagingSenderId: "146131122545",
+      appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    let currentUser = null;
+    let selectedUser = null;
+
+    // 🔹 Login automático simples (para testes)
+    const email = prompt("Digite seu email:");
+    const password = "123456"; // senha padrão só pra teste
+
+    signInWithEmailAndPassword(auth, email, password)
+      .catch(async (err) => {
+        await createUserWithEmailAndPassword(auth, email, password);
+      });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loadUsers();
+      }
+    });
+
+    // 🔹 Carregar usuários
+    async function loadUsers() {
+      const q = query(collection(db, "users"));
+      onSnapshot(q, (snapshot) => {
+        const listDiv = document.getElementById("userList");
+        listDiv.innerHTML = "";
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.uid !== currentUser.uid) {
+            const div = document.createElement("div");
+            div.classList.add("user");
+            div.textContent = data.email;
+            div.onclick = () => openChat(data.uid, data.email);
+            listDiv.appendChild(div);
+          }
+        });
+      });
+    }
+
+    // 🔹 Criar registro do usuário
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      const userRef = collection(db, "users");
+      const q = query(userRef, where("uid", "==", user.uid));
+      onSnapshot(q, (snap) => {
+        if (snap.empty) {
+          addDoc(userRef, { uid: user.uid, email: user.email });
+        }
+      });
+    });
+
+    // 🔹 Abrir conversa
+    function openChat(uid, email) {
+      selectedUser = { uid, email };
+      document.getElementById("messages").innerHTML = "";
+      loadMessages();
+    }
+
+    // 🔹 Carregar mensagens em tempo real
+    function loadMessages() {
+      if (!selectedUser) return;
+      const msgsRef = collection(db, "messages");
+      const q = query(
+        msgsRef,
+        where("participants", "array-contains", currentUser.uid),
+        orderBy("timestamp")
+      );
+      onSnapshot(q, (snapshot) => {
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = "";
+        snapshot.forEach((doc) => {
+          const msg = doc.data();
+          if (
+            (msg.from === currentUser.uid && msg.to === selectedUser.uid) ||
+            (msg.from === selectedUser.uid && msg.to === currentUser.uid)
+          ) {
+            const div = document.createElement("div");
+            div.classList.add("message");
+            div.classList.add(msg.from === currentUser.uid ? "sent" : "received");
+            div.textContent = msg.text;
+            messagesDiv.appendChild(div);
+          }
+        });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    }
+
+    // 🔹 Enviar mensagem
+    document.getElementById("sendBtn").onclick = async () => {
+      const text = document.getElementById("messageInput").value.trim();
+      if (!text || !selectedUser) return;
+      await addDoc(collection(db, "messages"), {
+        from: currentUser.uid,
+        to: selectedUser.uid,
+        text,
+        participants: [currentUser.uid, selectedUser.uid],
+        timestamp: serverTimestamp(),
+      });
+      document.getElementById("messageInput").value = "";
+    };
+  </script>
 </body>
-            </html>
+  </html>
