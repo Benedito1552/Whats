@@ -58,9 +58,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { 
-    getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, doc, getDocs 
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -79,9 +77,7 @@
   let currentUser = null;
   let selectedContact = null;
   let unsubscribeMessages = null;
-  let unreadMap = {}; // Armazena mensagens não lidas
 
-  // DOM
   const loginScreen = document.getElementById("login-screen");
   const chatScreen = document.getElementById("chat-screen");
   const contactsDiv = document.getElementById("contacts");
@@ -111,11 +107,7 @@
     } catch (err) { alert(err.message); }
   };
 
-  loginBtn.onclick = async () => {
-    try { await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value); }
-    catch (err) { alert(err.message); }
-  };
-
+  loginBtn.onclick = async () => { try { await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value); } catch (err) { alert(err.message); } };
   logoutBtn.onclick = async () => { await signOut(auth); };
 
   onAuthStateChanged(auth, (user) => {
@@ -151,28 +143,37 @@
         div.onclick = () => openChatModal(user, div);
         contactsDiv.appendChild(div);
 
-        // Monitorar novas mensagens para este contato
-        monitorUnreadMessages(user.uid, notif);
+        // Monitorar novas mensagens para este contato com push e bolinha
+        monitorUnreadMessages(user.uid, notif, user.email);
       }
     });
   }
 
-  function monitorUnreadMessages(otherUid, notifEl) {
+  function monitorUnreadMessages(otherUid, notifEl, otherEmail) {
     const chatId = getChatId(currentUser.uid, otherUid);
     const messagesRef = collection(db, "chats", chatId, "messages");
+
     onSnapshot(messagesRef, snapshot => {
       let unread = 0;
+      let lastMessage = null;
+
       snapshot.forEach(docSnap => {
         const msg = docSnap.data();
-        if (msg.from === otherUid) unread++;
+        if (msg.from === otherUid) {
+          unread++;
+          lastMessage = msg.text;
+        }
       });
-      unreadMap[otherUid] = unread;
+
       notifEl.style.display = (unread > 0 && (!selectedContact || selectedContact.uid !== otherUid)) ? "inline-block" : "none";
 
-      // Push notification
       if (unread > 0 && (!selectedContact || selectedContact.uid !== otherUid)) {
-        if (Notification.permission === "granted") {
-          new Notification("Nova mensagem", { body: "De: " + otherUid });
+        if ("Notification" in window && Notification.permission === "granted" && lastMessage) {
+          const preview = lastMessage.length > 50 ? lastMessage.substring(0, 50) + "…" : lastMessage;
+          new Notification("Nova mensagem de " + otherEmail, {
+            body: preview,
+            icon: "https://cdn-icons-png.flaticon.com/512/124/124034.png"
+          });
         }
       }
     });
@@ -187,27 +188,14 @@
     listenMessages(user);
   }
 
-  closeModal.onclick = () => { 
-    chatModal.style.display = "none"; 
-    if (unsubscribeMessages) unsubscribeMessages(); 
-    selectedContact = null;
-  };
+  closeModal.onclick = () => { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; };
+  window.onclick = (event) => { if (event.target === chatModal) { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; } };
 
-  window.onclick = (event) => {
-    if (event.target === chatModal) {
-      chatModal.style.display = "none"; 
-      if (unsubscribeMessages) unsubscribeMessages();
-      selectedContact = null;
-    }
-  };
-
-  // === Ouvir mensagens ===
   function listenMessages(user) {
     if (unsubscribeMessages) unsubscribeMessages();
-
     const chatId = getChatId(currentUser.uid, user.uid);
     const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp"));
-    unsubscribeMessages = onSnapshot(q, (snapshot) => {
+    unsubscribeMessages = onSnapshot(q, snapshot => {
       messagesDiv.innerHTML = "";
       snapshot.forEach(docSnap => {
         const msg = docSnap.data();
@@ -221,7 +209,6 @@
     });
   }
 
-  // === Enviar mensagem ===
   sendBtn.onclick = async () => {
     if (!selectedContact) return alert("Selecione um contato primeiro!");
     const text = msgInput.value.trim();
@@ -236,16 +223,12 @@
     msgInput.value = "";
   };
 
-  // === Gerar ID único do chat 1:1 ===
-  function getChatId(uid1, uid2) {
-    return [uid1, uid2].sort().join("_");
-  }
+  function getChatId(uid1, uid2) { return [uid1, uid2].sort().join("_"); }
 
-  // === Solicitar permissão para notificações push ===
   if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
   }
 
 </script>
 </body>
-</html>
+  </html>
