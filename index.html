@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Api. PITIMBU DA SORTE</title>
+<title>Mini WhatsApp</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -16,6 +16,18 @@
     text-align: center;
     padding: 10px;
     font-size: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header button {
+    background: #128C7E;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
   }
   #login-container, #chat-container {
     display: none;
@@ -24,7 +36,7 @@
   input, button {
     padding: 10px;
     margin: 5px 0;
-    width: 80%;
+    width: 100%;
     border: 1px solid #ccc;
     border-radius: 5px;
   }
@@ -38,14 +50,24 @@
     border-top: 1px solid #ccc;
   }
   .user {
-    background: black;
-    color: white;
+    background: white;
     padding: 10px;
     border-bottom: 1px solid #ddd;
     cursor: pointer;
+    position: relative;
   }
   .user:hover {
     background: #eaeaea;
+  }
+  .badge {
+    position: absolute;
+    right: 10px;
+    top: 12px;
+    background: red;
+    color: white;
+    padding: 3px 7px;
+    border-radius: 50%;
+    font-size: 12px;
   }
   #chatModal {
     position: fixed;
@@ -57,8 +79,8 @@
   }
   #chatBox {
     background: white;
-    width: 100%;
-    max-width: 80px;
+    width: 90%;
+    max-width: 400px;
     height: 80%;
     border-radius: 10px;
     display: flex;
@@ -95,7 +117,10 @@
 </style>
 </head>
 <body>
-<header>CHAT PITIMBU DA SORTE</header>
+<header>
+  <span>Mini WhatsApp</span>
+  <button id="logoutBtn">Sair</button>
+</header>
 
 <div id="login-container">
   <h3>Login / Cadastro</h3>
@@ -106,8 +131,10 @@
 </div>
 
 <div id="chat-container">
-  <input type="text" id="searchInput" placeholder="Pesquisar contato...">
-  <button type="submit">pesquisar</button>
+  <div style="display:flex; gap:5px;">
+    <input type="text" id="searchInput" placeholder="Pesquisar contato...">
+    <button id="searchBtn">Pesquisar</button>
+  </div>
   <div id="userList"></div>
 </div>
 
@@ -123,7 +150,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, updateDoc, arrayUnion, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -146,22 +173,27 @@
   const messagesDiv = document.getElementById('messages');
   const sendForm = document.getElementById('sendForm');
   const messageInput = document.getElementById('messageInput');
+  const searchInput = document.getElementById('searchInput');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const searchBtn = document.getElementById('searchBtn');
 
   let currentUser = null;
   let currentChatId = null;
 
+  // Cadastro
   document.getElementById('signupBtn').onclick = async () => {
     const email = emailInput.value;
     const password = passwordInput.value;
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(db, "users", userCredential.user.uid), { email });
-      alert("Usuário cadastrado!");
+      alert("Usuário cadastrado com sucesso!");
     } catch (e) {
       alert(e.message);
     }
   };
 
+  // Login
   document.getElementById('loginBtn').onclick = async () => {
     const email = emailInput.value;
     const password = passwordInput.value;
@@ -172,6 +204,12 @@
     }
   };
 
+  // Logout
+  logoutBtn.onclick = async () => {
+    await signOut(auth);
+  };
+
+  // Estado da sessão
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
@@ -184,6 +222,7 @@
     }
   });
 
+  // Carrega usuários
   async function loadUsers() {
     const q = query(collection(db, "users"));
     onSnapshot(q, (snapshot) => {
@@ -200,6 +239,31 @@
     });
   }
 
+  // Pesquisa usuário
+  searchBtn.onclick = async () => {
+    const term = searchInput.value.trim().toLowerCase();
+    if (!term) return alert("Digite algo para pesquisar.");
+
+    const q = query(collection(db, "users"), where("email", "==", term));
+    const snap = await getDocs(q);
+    userList.innerHTML = "";
+    if (snap.empty) {
+      userList.innerHTML = "<p>Nenhum usuário encontrado.</p>";
+      return;
+    }
+
+    snap.forEach(docSnap => {
+      if (docSnap.id !== currentUser.uid) {
+        const userDiv = document.createElement("div");
+        userDiv.className = "user";
+        userDiv.textContent = docSnap.data().email;
+        userDiv.onclick = () => openChat(docSnap.id, docSnap.data().email);
+        userList.appendChild(userDiv);
+      }
+    });
+  };
+
+  // Abre chat
   async function openChat(targetId, targetEmail) {
     chatModal.style.display = "flex";
     currentChatId = [currentUser.uid, targetId].sort().join("_");
@@ -226,6 +290,7 @@
     });
   }
 
+  // Envia mensagem
   sendForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const text = messageInput.value.trim();
@@ -237,9 +302,10 @@
     messageInput.value = "";
   });
 
+  // Fecha modal ao clicar fora
   window.onclick = (e) => {
     if (e.target === chatModal) chatModal.style.display = "none";
   };
 </script>
 </body>
-</html>
+  </html>
