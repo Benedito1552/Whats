@@ -3,112 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WhatsApp</title>
+<title>Mini WhatsApp</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #f2f2f2;
-  }
+  body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
   header {
-    background: #075E54;
-    color: white;
-    text-align: center;
-    padding: 10px;
-    font-size: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: #075E54; color: white; text-align: center; padding: 10px;
+    font-size: 20px; display: flex; justify-content: space-between; align-items: center;
   }
-  header button {
-    background: #128C7E;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  #login-container, #chat-container {
-    display: none;
-    padding: 20px;
-  }
-  input, button {
-    padding: 10px;
-    margin: 5px 0;
-    width: 30%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  button {
-    background: #128C7E;
-    color: white;
-    cursor: pointer;
-  }
-  #userList {
-    margin-top: 10px;
-    border-top: 1px solid #ccc;
-  }
-  .user {
-    background: white;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    cursor: pointer;
-    position: relative;
-  }
-  .user:hover {
-    background: #eaeaea;
-  }
-  #chatModal {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-  }
-  #chatBox {
-    background: white;
-    width: 90%;
-    max-width: 400px;
-    height: 80%;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-  }
-  #messages {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-  }
-  .msg {
-    margin: 5px 0;
-    padding: 8px;
-    border-radius: 10px;
-    max-width: 80%;
-  }
-  .sent {
-    background: #dcf8c6;
-    align-self: flex-end;
-  }
-  .received {
-    background: #fff;
-    align-self: flex-start;
-  }
-  #sendForm {
-    display: flex;
-    border-top: 1px solid #ccc;
-  }
-  #messageInput {
-    flex: 1;
-    border: none;
-    padding: 10px;
-  }
+  header button { background: #128C7E; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+  #login-container, #chat-container { display: none; padding: 20px; }
+  input, button { padding: 10px; margin: 5px 0; width: 100%; border: 1px solid #ccc; border-radius: 5px; }
+  button { background: #128C7E; color: white; cursor: pointer; }
+  #userList { margin-top: 10px; border-top: 1px solid #ccc; }
+  .user { background: white; padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; position: relative; }
+  .user:hover { background: #eaeaea; }
+  .badge { position: absolute; right: 10px; top: 12px; background: red; color: white; padding: 3px 7px; border-radius: 50%; font-size: 12px; }
+  #chatModal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; }
+  #chatBox { background: white; width: 90%; max-width: 400px; height: 80%; border-radius: 10px; display: flex; flex-direction: column; }
+  #messages { flex: 1; padding: 10px; overflow-y: auto; }
+  .msg { margin: 5px 0; padding: 8px; border-radius: 10px; max-width: 80%; }
+  .sent { background: #dcf8c6; align-self: flex-end; }
+  .received { background: #fff; align-self: flex-start; }
+  #sendForm { display: flex; border-top: 1px solid #ccc; }
+  #messageInput { flex: 1; border: none; padding: 10px; }
 </style>
 </head>
 <body>
 <header>
-  <span>®️Atendimento Pitimbu da Sorte</span>
+  <span>Mini WhatsApp</span>
   <button id="logoutBtn">Sair</button>
 </header>
 
@@ -156,7 +78,6 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // Referências corretas do DOM
   const loginContainer = document.getElementById('login-container');
   const chatContainer = document.getElementById('chat-container');
   const userList = document.getElementById('userList');
@@ -172,6 +93,7 @@
 
   let currentUser = null;
   let currentChatId = null;
+  let unreadMessages = {}; // Guarda mensagens não lidas por chat
 
   // Cadastro
   document.getElementById('signupBtn').onclick = async () => {
@@ -192,17 +114,12 @@
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
     if (!email || !password) return alert("Preencha e-mail e senha!");
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (e) {
-      alert(e.message);
-    }
+    try { await signInWithEmailAndPassword(auth, email, password); }
+    catch (e) { alert(e.message); }
   };
 
   // Logout
-  logoutBtn.onclick = async () => {
-    await signOut(auth);
-  };
+  logoutBtn.onclick = async () => { await signOut(auth); };
 
   // Sessão
   onAuthStateChanged(auth, async (user) => {
@@ -217,7 +134,6 @@
     }
   });
 
-  // Carrega usuários
   async function loadUsers() {
     const q = query(collection(db, "users"));
     onSnapshot(q, (snapshot) => {
@@ -227,14 +143,38 @@
           const userDiv = document.createElement("div");
           userDiv.className = "user";
           userDiv.textContent = docSnap.data().email;
-          userDiv.onclick = () => openChat(docSnap.id, docSnap.data().email);
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.style.display = "none"; // inicialmente invisível
+          userDiv.appendChild(badge);
+
+          // Checa mensagens não lidas
+          const chatId = [currentUser.uid, docSnap.id].sort().join("_");
+          const chatRef = doc(db, "chats", chatId);
+          onSnapshot(chatRef, snap => {
+            if (snap.exists()) {
+              const data = snap.data();
+              const msgs = data.messages || [];
+              const lastMsg = msgs[msgs.length-1];
+              if (lastMsg && lastMsg.sender !== currentUser.uid) {
+                badge.style.display = "inline-block"; // mensagem nova
+                unreadMessages[chatId] = true;
+              }
+            }
+          });
+
+          userDiv.onclick = () => {
+            badge.style.display = "none";
+            delete unreadMessages[[currentUser.uid, docSnap.id].sort().join("_")];
+            openChat(docSnap.id, docSnap.data().email);
+          };
           userList.appendChild(userDiv);
         }
       });
     });
   }
 
-  // Pesquisa usuário
+  // Pesquisa
   searchBtn.onclick = async () => {
     const term = searchInput.value.trim().toLowerCase();
     if (!term) return alert("Digite algo para pesquisar.");
@@ -250,7 +190,31 @@
         const userDiv = document.createElement("div");
         userDiv.className = "user";
         userDiv.textContent = docSnap.data().email;
-        userDiv.onclick = () => openChat(docSnap.id, docSnap.data().email);
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.style.display = "none";
+        userDiv.appendChild(badge);
+
+        const chatId = [currentUser.uid, docSnap.id].sort().join("_");
+        const chatRef = doc(db, "chats", chatId);
+        onSnapshot(chatRef, snap => {
+          if (snap.exists()) {
+            const data = snap.data();
+            const msgs = data.messages || [];
+            const lastMsg = msgs[msgs.length - 1];
+            if (lastMsg && lastMsg.sender !== currentUser.uid) {
+              badge.style.display = "inline-block";
+              unreadMessages[chatId] = true;
+            }
+          }
+        });
+
+        userDiv.onclick = () => {
+          badge.style.display = "none";
+          delete unreadMessages[chatId];
+          openChat(docSnap.id, docSnap.data().email);
+        };
+
         userList.appendChild(userDiv);
       }
     });
@@ -295,10 +259,10 @@
     messageInput.value = "";
   });
 
-  // Fecha modal ao clicar fora
+  // Fecha modal clicando fora
   window.onclick = (e) => {
     if (e.target === chatModal) chatModal.style.display = "none";
   };
 </script>
 </body>
-        </html>
+</html>
