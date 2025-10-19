@@ -1,80 +1,304 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - Rede Social</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mini WhatsApp</title>
 <style>
-body { font-family: Arial; background:#f0f2f5; display:flex; justify-content:center; align-items:center; height:100vh; }
-.box { background:#fff; padding:30px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.2); width:320px; text-align:center; }
-input { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:8px; }
-button { width:100%; background:#25d366; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-size:16px; }
-button:hover { background:#1ebe57; }
-#error { color:red; margin-top:10px; font-size:14px; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+  }
+  .container {
+    max-width: 800px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ccc;
+    overflow: hidden;
+  }
+  header {
+    background: #6200ea;
+    color: white;
+    text-align: center;
+    padding: 15px;
+  }
+  #authArea, #chatArea {
+    padding: 20px;
+  }
+  input {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+  }
+  button {
+    padding: 10px 15px;
+    background: #6200ea;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  button:hover {
+    background: #4a00b5;
+  }
+  #userList {
+    width: 30%;
+    float: left;
+    border-right: 1px solid #ddd;
+    height: 400px;
+    overflow-y: auto;
+  }
+  #userList div {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+  }
+  #userList div:hover {
+    background: #f0f0f0;
+  }
+  #messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    height: 350px;
+  }
+  .message {
+    padding: 8px;
+    border-radius: 10px;
+    margin: 5px 0;
+    max-width: 70%;
+  }
+  .sent {
+    background: #dcf8c6;
+    margin-left: auto;
+  }
+  .received {
+    background: #eee;
+    margin-right: auto;
+  }
+  #chatContent {
+    width: 70%;
+    float: right;
+    display: flex;
+    flex-direction: column;
+  }
+  #inputArea {
+    display: flex;
+    border-top: 1px solid #ddd;
+  }
+  #msgInput {
+    flex: 1;
+    border: none;
+    padding: 10px;
+  }
+  #status {
+    text-align: center;
+    margin-top: 10px;
+    color: #555;
+  }
 </style>
 </head>
 <body>
-<div class="box">
-  <h2>Entrar</h2>
-  <input type="email" id="email" placeholder="E-mail" />
-  <input type="password" id="password" placeholder="Senha" />
-  <button id="loginBtn">Entrar</button>
-  <p id="error"></p>
-</div>
+  <div class="container">
+    <header>💬 Mini WhatsApp</header>
+
+    <div id="authArea">
+      <h3>Entrar ou Cadastrar</h3>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Senha" />
+      <button id="loginBtn">Entrar</button>
+      <button id="registerBtn">Cadastrar</button>
+    </div>
+
+    <div id="chatArea" style="display:none;">
+      <button id="logoutBtn">Sair</button>
+      <div id="status"></div>
+
+      <div id="userList"></div>
+      <div id="chatContent">
+        <h3 id="chatWith">Selecione um contato</h3>
+        <div id="messages"></div>
+        <div id="inputArea">
+          <input id="msgInput" type="text" placeholder="Digite uma mensagem..." />
+          <button id="sendBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    setDoc,
+    getDocs,
+    addDoc,
+    query,
+    orderBy,
+    onSnapshot,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD8IxOX_0e6T7DUzGf1DlPOHLNCq5zCK2M",
-  authDomain: "pitimbu-da-sorte-80aa6.firebaseapp.com",
-  projectId: "pitimbu-da-sorte-80aa6",
-  storageBucket: "pitimbu-da-sorte-80aa6.appspot.com",
-  messagingSenderId: "365898285373",
-  appId: "1:365898285373:web:2ce4e344f1e9774c068554"
-};
+  // 🔧 Configuração Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
+    authDomain: "cursos-6f950.firebaseapp.com",
+    projectId: "cursos-6f950",
+    storageBucket: "cursos-6f950.firebasestorage.app",
+    messagingSenderId: "146131122545",
+    appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-const loginBtn = document.getElementById("loginBtn");
-const errorBox = document.getElementById("error");
+  // 🔹 Elementos
+  const authArea = document.getElementById("authArea");
+  const chatArea = document.getElementById("chatArea");
+  const emailInput = document.getElementById("email");
+  const passInput = document.getElementById("password");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userListDiv = document.getElementById("userList");
+  const messagesDiv = document.getElementById("messages");
+  const sendBtn = document.getElementById("sendBtn");
+  const msgInput = document.getElementById("msgInput");
+  const chatWith = document.getElementById("chatWith");
+  const statusEl = document.getElementById("status");
 
-// Se já estiver logado, vai direto pro chat
-onAuthStateChanged(auth, (user) => {
-  if (user) window.location.href = "chat.html";
-});
+  let currentUser = null;
+  let selectedUser = null;
+  let unsubscribe = null;
 
-loginBtn.addEventListener("click", async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  errorBox.textContent = "";
+  // 🟢 Entrar
+  loginBtn.onclick = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
+    } catch (e) {
+      alert("Erro ao entrar: " + e.message);
+    }
+  };
 
-  if (!email || !password) {
-    errorBox.textContent = "Preencha todos os campos!";
-    return;
+  // 🟡 Registrar
+  registerBtn.onclick = async () => {
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
+      const user = userCred.user;
+
+      // Cria documento do usuário no Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email
+      });
+    } catch (e) {
+      alert("Erro ao cadastrar: " + e.message);
+    }
+  };
+
+  // 🔴 Logout
+  logoutBtn.onclick = async () => {
+    await signOut(auth);
+  };
+
+  // 👀 Monitora autenticação
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      authArea.style.display = "none";
+      chatArea.style.display = "block";
+      statusEl.textContent = `Conectado como: ${user.email}`;
+
+      // Garante que o usuário exista no Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email
+      });
+
+      carregarUsuarios();
+    } else {
+      authArea.style.display = "block";
+      chatArea.style.display = "none";
+    }
+  });
+
+  // 🔁 Carrega lista de usuários
+  async function carregarUsuarios() {
+    const usersRef = collection(db, "users");
+    const snapshot = await getDocs(usersRef);
+
+    userListDiv.innerHTML = "";
+    snapshot.forEach(docSnap => {
+      const user = docSnap.data();
+      if (user.uid !== currentUser.uid) {
+        const div = document.createElement("div");
+        div.textContent = user.email;
+        div.onclick = () => abrirChat(user);
+        userListDiv.appendChild(div);
+      }
+    });
   }
 
-  try {
-    await signOut(auth); // limpa sessão antiga
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    const user = cred.user;
-
-    await setDoc(doc(db, "users", user.uid), {
-      status: "online",
-      lastSeen: serverTimestamp()
-    }, { merge: true });
-
-    alert("Login bem-sucedido!");
-    window.location.href = "chat.html";
-  } catch (err) {
-    console.error(err);
-    errorBox.textContent = "Erro ao logar: " + err.message;
+  // 🧩 Cria ID único de chat
+  function getChatId(uid1, uid2) {
+    return [uid1, uid2].sort().join("_");
   }
-});
+
+  // 💬 Abre conversa
+  function abrirChat(user) {
+    selectedUser = user;
+    chatWith.textContent = "Conversando com: " + user.email;
+    messagesDiv.innerHTML = "";
+    if (unsubscribe) unsubscribe();
+
+    const chatId = getChatId(currentUser.uid, user.uid);
+    const messagesRef = collection(db, "chats", chatId, "messages");
+    const q = query(messagesRef, orderBy("timestamp"));
+
+    unsubscribe = onSnapshot(q, (snapshot) => {
+      messagesDiv.innerHTML = "";
+      snapshot.forEach(docSnap => {
+        const msg = docSnap.data();
+        const div = document.createElement("div");
+        div.classList.add("message", msg.from === currentUser.uid ? "sent" : "received");
+        div.textContent = msg.text;
+        messagesDiv.appendChild(div);
+      });
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  }
+
+  // 🚀 Enviar mensagem
+  sendBtn.onclick = async () => {
+    if (!selectedUser) return alert("Selecione um contato!");
+    const text = msgInput.value.trim();
+    if (!text) return;
+
+    const chatId = getChatId(currentUser.uid, selectedUser.uid);
+    const messagesRef = collection(db, "chats", chatId, "messages");
+
+    await addDoc(messagesRef, {
+      text,
+      from: currentUser.uid,
+      to: selectedUser.uid,
+      timestamp: serverTimestamp()
+    });
+
+    msgInput.value = "";
+  };
 </script>
 </body>
-</html>
+  </html>
