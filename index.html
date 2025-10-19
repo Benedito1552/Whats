@@ -1,234 +1,80 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mini WhatsApp</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Rede Social</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #ece5dd; margin: 0; padding: 0; }
-  #login-screen, #chat-screen { max-width: 400px; margin: 60px auto; background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-  input { width: 90%; padding: 10px; margin: 10px 0; }
-  button { padding: 10px 20px; background: #25d366; color: white; border: none; border-radius: 6px; cursor: pointer; }
-  #contacts { background: #fff; border-radius: 10px; max-width: 400px; margin: 10px auto; padding: 10px; }
-  .contact { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; position: relative; }
-  .contact:hover { background: #f0f0f0; }
-  .notification { position: absolute; right: 10px; top: 10px; width: 12px; height: 12px; background: red; border-radius: 50%; }
-  .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
-  .modal-content { background: #fff; border-radius: 10px; width: 90%; max-width: 400px; margin: 50px auto; padding: 10px; position: relative; display: flex; flex-direction: column; height: 70%; animation: abrirModal 0.3s ease; }
-  @keyframes abrirModal { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-  .close { position: absolute; right: 15px; top: 10px; font-size: 22px; cursor: pointer; }
-  #messages { flex: 1; overflow-y: auto; padding: 10px; border: 1px solid #ddd; background: #f9f9f9; }
-  .message { margin: 5px; padding: 8px 12px; border-radius: 15px; max-width: 75%; clear: both; }
-  .sent { background: #dcf8c6; align-self: flex-end; float: right; }
-  .received { background: #fff; float: left; }
-  #message-input { width: 70%; padding: 10px; }
-  #send-btn { width: 25%; }
+body { font-family: Arial; background:#f0f2f5; display:flex; justify-content:center; align-items:center; height:100vh; }
+.box { background:#fff; padding:30px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.2); width:320px; text-align:center; }
+input { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:8px; }
+button { width:100%; background:#25d366; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-size:16px; }
+button:hover { background:#1ebe57; }
+#error { color:red; margin-top:10px; font-size:14px; }
 </style>
 </head>
 <body>
-  <!-- Login -->
-  <div id="login-screen">
-    <h2>Entrar</h2>
-    <input id="email" placeholder="Email"><br>
-    <input id="password" type="password" placeholder="Senha"><br>
-    <button id="login-btn">Entrar</button>
-    <button id="register-btn">Cadastrar</button>
-  </div>
-
-  <!-- Chat -->
-  <div id="chat-screen" style="display:none;">
-    <h3>Conectado como: <span id="user-name"></span></h3>
-    <button id="logout-btn">Sair</button>
-    <h4>Contatos</h4>
-    <div id="contacts"></div>
-  </div>
-
-  <!-- Modal de Chat -->
-  <div id="chat-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3 id="chat-header">Chat</h3>
-      <div id="messages"></div>
-      <div style="margin-top:10px;">
-        <input id="message-input" placeholder="Digite uma mensagem...">
-        <button id="send-btn">Enviar</button>
-      </div>
-    </div>
-  </div>
+<div class="box">
+  <h2>Entrar</h2>
+  <input type="email" id="email" placeholder="E-mail" />
+  <input type="password" id="password" placeholder="Senha" />
+  <button id="loginBtn">Entrar</button>
+  <p id="error"></p>
+</div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
-    authDomain: "cursos-6f950.firebaseapp.com",
-    projectId: "cursos-6f950",
-    storageBucket: "cursos-6f950.firebasestorage.app",
-    messagingSenderId: "146131122545",
-    appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyD8IxOX_0e6T7DUzGf1DlPOHLNCq5zCK2M",
+  authDomain: "pitimbu-da-sorte-80aa6.firebaseapp.com",
+  projectId: "pitimbu-da-sorte-80aa6",
+  storageBucket: "pitimbu-da-sorte-80aa6.appspot.com",
+  messagingSenderId: "365898285373",
+  appId: "1:365898285373:web:2ce4e344f1e9774c068554"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  let currentUser = null;
-  let selectedContact = null;
-  let unsubscribeMessages = null;
+const loginBtn = document.getElementById("loginBtn");
+const errorBox = document.getElementById("error");
 
-  const loginScreen = document.getElementById("login-screen");
-  const chatScreen = document.getElementById("chat-screen");
-  const contactsDiv = document.getElementById("contacts");
-  const messagesDiv = document.getElementById("messages");
-  const chatHeader = document.getElementById("chat-header");
-  const emailInput = document.getElementById("email");
-  const passwordInput = document.getElementById("password");
-  const loginBtn = document.getElementById("login-btn");
-  const registerBtn = document.getElementById("register-btn");
-  const logoutBtn = document.getElementById("logout-btn");
-  const sendBtn = document.getElementById("send-btn");
-  const msgInput = document.getElementById("message-input");
-  const userNameEl = document.getElementById("user-name");
-  const chatModal = document.getElementById("chat-modal");
-  const closeModal = document.querySelector(".close");
+// Se já estiver logado, vai direto pro chat
+onAuthStateChanged(auth, (user) => {
+  if (user) window.location.href = "chat.html";
+});
 
-  // === Cadastro/Login/Logout ===
-  registerBtn.onclick = async () => {
-    try {
-      const userCred = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-      await setDoc(doc(db, "users", userCred.user.uid), {
-        email: userCred.user.email,
-        uid: userCred.user.uid,
-        createdAt: serverTimestamp()
-      });
-      alert("Usuário cadastrado com sucesso!");
-    } catch (err) { alert(err.message); }
-  };
+loginBtn.addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  errorBox.textContent = "";
 
-  loginBtn.onclick = async () => { try { await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value); } catch (err) { alert(err.message); } };
-  logoutBtn.onclick = async () => { await signOut(auth); };
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      currentUser = user;
-      loginScreen.style.display = "none";
-      chatScreen.style.display = "block";
-      userNameEl.textContent = user.email;
-      loadContacts();
-    } else {
-      currentUser = null;
-      chatScreen.style.display = "none";
-      loginScreen.style.display = "block";
-    }
-  });
-
-  async function loadContacts() {
-    const snapshot = await getDocs(collection(db, "users"));
-    contactsDiv.innerHTML = "";
-    snapshot.forEach(docSnap => {
-      const user = docSnap.data();
-      if (user.email !== currentUser.email) {
-        const div = document.createElement("div");
-        div.classList.add("contact");
-        div.textContent = user.email;
-        div.dataset.uid = user.uid;
-
-        const notif = document.createElement("span");
-        notif.classList.add("notification");
-        notif.style.display = "none";
-        div.appendChild(notif);
-
-        div.onclick = () => openChatModal(user, div);
-        contactsDiv.appendChild(div);
-
-        // Monitorar novas mensagens para este contato com push e bolinha
-        monitorUnreadMessages(user.uid, notif, user.email);
-      }
-    });
+  if (!email || !password) {
+    errorBox.textContent = "Preencha todos os campos!";
+    return;
   }
 
-  function monitorUnreadMessages(otherUid, notifEl, otherEmail) {
-    const chatId = getChatId(currentUser.uid, otherUid);
-    const messagesRef = collection(db, "chats", chatId, "messages");
+  try {
+    await signOut(auth); // limpa sessão antiga
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const user = cred.user;
 
-    onSnapshot(messagesRef, snapshot => {
-      let unread = 0;
-      let lastMessage = null;
+    await setDoc(doc(db, "users", user.uid), {
+      status: "online",
+      lastSeen: serverTimestamp()
+    }, { merge: true });
 
-      snapshot.forEach(docSnap => {
-        const msg = docSnap.data();
-        if (msg.from === otherUid) {
-          unread++;
-          lastMessage = msg.text;
-        }
-      });
-
-      notifEl.style.display = (unread > 0 && (!selectedContact || selectedContact.uid !== otherUid)) ? "inline-block" : "none";
-
-      if (unread > 0 && (!selectedContact || selectedContact.uid !== otherUid)) {
-        if ("Notification" in window && Notification.permission === "granted" && lastMessage) {
-          const preview = lastMessage.length > 50 ? lastMessage.substring(0, 50) + "…" : lastMessage;
-          new Notification("Nova mensagem de " + otherEmail, {
-            body: preview,
-            icon: "https://cdn-icons-png.flaticon.com/512/124/124034.png"
-          });
-        }
-      }
-    });
+    alert("Login bem-sucedido!");
+    window.location.href = "chat.html";
+  } catch (err) {
+    console.error(err);
+    errorBox.textContent = "Erro ao logar: " + err.message;
   }
-
-  function openChatModal(user, contactDiv) {
-    selectedContact = user;
-    chatHeader.textContent = "Conversando com: " + user.email;
-    chatModal.style.display = "block";
-    messagesDiv.innerHTML = "";
-    contactDiv.querySelector(".notification").style.display = "none";
-    listenMessages(user);
-  }
-
-  closeModal.onclick = () => { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; };
-  window.onclick = (event) => { if (event.target === chatModal) { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; } };
-
-  function listenMessages(user) {
-    if (unsubscribeMessages) unsubscribeMessages();
-    const chatId = getChatId(currentUser.uid, user.uid);
-    const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp"));
-    unsubscribeMessages = onSnapshot(q, snapshot => {
-      messagesDiv.innerHTML = "";
-      snapshot.forEach(docSnap => {
-        const msg = docSnap.data();
-        const div = document.createElement("div");
-        div.classList.add("message");
-        div.classList.add(msg.from === currentUser.uid ? "sent" : "received");
-        div.textContent = msg.text;
-        messagesDiv.appendChild(div);
-      });
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    });
-  }
-
-  sendBtn.onclick = async () => {
-    if (!selectedContact) return alert("Selecione um contato primeiro!");
-    const text = msgInput.value.trim();
-    if (text === "") return;
-
-    const chatId = getChatId(currentUser.uid, selectedContact.uid);
-    await addDoc(collection(db, "chats", chatId, "messages"), {
-      text,
-      from: currentUser.uid,
-      timestamp: serverTimestamp()
-    });
-    msgInput.value = "";
-  };
-
-  function getChatId(uid1, uid2) { return [uid1, uid2].sort().join("_"); }
-
-  if ("Notification" in window && Notification.permission !== "granted") {
-    Notification.requestPermission();
-  }
-
+});
 </script>
 </body>
-  </html>
+</html>
