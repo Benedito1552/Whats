@@ -1,435 +1,358 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mini WhatsApp Telegram Style</title>
-  <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background: #e5e5e5;
-      margin: 0;
-    }
-    body.dark-mode {
-      background: #121212;
-      color: #e0e0e0;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      max-width: 1000px;
-      margin: auto;
-      background: white;
-      box-shadow: 0 0 10px #ccc;
-    }
-    .dark-mode .container {
-      background: #1e1e1e;
-      box-shadow: none;
-    }
-    header {
-      background: #0088cc;
-      color: white;
-      text-align: center;
-      padding: 15px;
-      font-size: 20px;
-    }
-    #authArea, #chatArea {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-    }
-    #chatArea {
-      display: none;
-    }
-    .chatBody {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-      border-top: 1px solid #ddd;
-    }
-    #userList {
-      width: 280px;
-      background: #f7f7f7;
-      border-right: 1px solid #ddd;
-      overflow-y: auto;
-    }
-    .dark-mode #userList {
-      background: #1a1a1a;
-      border-color: #333;
-    }
-    #userList div {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-    }
-    #userList div:hover {
-      background: #e0e0e0;
-    }
-    .dark-mode #userList div:hover {
-      background: #333;
-    }
-    #chatContent {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #fff;
-    }
-    .dark-mode #chatContent {
-      background: #1e1e1e;
-    }
-    #chatHeader {
-      padding: 15px;
-      border-bottom: 1px solid #ddd;
-      font-weight: bold;
-      background: #f9f9f9;
-    }
-    .dark-mode #chatHeader {
-      background: #2a2a2a;
-      border-color: #333;
-    }
-    #searchMsg {
-      padding: 10px;
-      border: none;
-      border-bottom: 1px solid #ccc;
-    }
-    #messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    .message {
-      padding: 10px 15px;
-      border-radius: 20px;
-      margin: 5px 0;
-      max-width: 70%;
-      position: relative;
-    }
-    .sent {
-      background: #dcf8c6;
-      align-self: flex-end;
-    }
-    .received {
-      background: #eee;
-      align-self: flex-start;
-    }
-    .dark-mode .message.sent {
-      background: #2e7d32;
-      color: white;
-    }
-    .dark-mode .message.received {
-      background: #333;
-      color: white;
-    }
-    #inputArea {
-      display: flex;
-      border-top: 1px solid #ddd;
-      padding: 10px;
-    }
-    #msgInput {
-      flex: 1;
-      border: none;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 20px;
-      background: #f0f0f0;
-      margin-right: 10px;
-    }
-    .dark-mode #msgInput {
-      background: #2a2a2a;
-      color: white;
-    }
-    button {
-      padding: 10px 15px;
-      background: #0088cc;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #006fa1;
-    }
-    .dark-mode button {
-      background: #1976d2;
-    }
-    .dark-mode button:hover {
-      background: #1565c0;
-    }
-    #status {
-      text-align: center;
-      margin-top: 10px;
-      color: #555;
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mini WhatsApp - Completo</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#f0f2f5; margin:0; height:100vh; display:flex; }
+  #app { display:flex; flex:1; width:100%; }
+  #contacts { width:320px; background:#fff; border-right:1px solid #ddd; display:flex; flex-direction:column; }
+  #contacts h2 { margin:0; background:#075e54; color:#fff; padding:12px; }
+  #searchInput { padding:8px; border:none; border-bottom:1px solid #ccc; outline:none; }
+  #contactsList { flex:1; overflow:auto; }
+  .contact { padding:10px; cursor:pointer; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+  .contact:hover{ background:#f6f6f6; }
+  .contact .contact-name{ font-weight:600; }
+  .contact .meta{ display:flex; gap:8px; align-items:center; }
+  .status-dot{ width:10px; height:10px; border-radius:50%; }
+  .notification{ width:10px; height:10px; border-radius:50%; background:red; margin-left:6px; }
+  /* Chat modal */
+  #chatModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+  #chatBox { width:92%; max-width:760px; height:84%; background:#fff; border-radius:10px; display:flex; flex-direction:column; overflow:hidden; }
+  #chatHeader { background:#075e54; color:#fff; padding:12px; display:flex; justify-content:space-between; align-items:center; }
+  #messages { flex:1; padding:12px; overflow:auto; background:#e5ddd5; display:flex; flex-direction:column; gap:8px; }
+  .message { padding:8px 12px; border-radius:10px; max-width:72%; word-wrap:break-word; }
+  .sent { background:#dcf8c6; align-self:flex-end; }
+  .received { background:#fff; align-self:flex-start; }
+  #typingIndicator { font-size:13px; color:#666; padding:6px 12px; }
+  #inputArea { display:flex; gap:8px; padding:10px; align-items:center; border-top:1px solid #ccc; background:#fff; }
+  #msgInput { flex:1; padding:10px; border:1px solid #ccc; border-radius:8px; outline:none; }
+  button.icon { background:none; border:none; font-size:20px; cursor:pointer; }
+  #emojiPicker { position:absolute; bottom:86px; right:40px; background:#fff; border:1px solid #ccc; padding:8px; border-radius:8px; display:none; width:220px; max-height:200px; overflow:auto; }
+  .emoji { cursor:pointer; padding:6px; font-size:20px; display:inline-block; }
+  .message img { max-width:260px; border-radius:8px; display:block; margin-top:8px; }
+  /* responsive */
+  @media (max-width:600px){ #contacts { display:none; } #chatBox{ width:96%; } }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>💬 Mini WhatsApp</header>
+<div id="app">
+  <div id="contacts">
+    <h2>Contatos</h2>
+    <input id="searchInput" placeholder="Pesquisar contato..." />
+    <div id="contactsList"></div>
+  </div>
+</div>
 
-    <div id="authArea">
-      <h3>Entrar ou Cadastrar</h3>
-      <input type="email" id="email" placeholder="Email" />
-      <input type="password" id="password" placeholder="Senha" />
-      <button id="loginBtn">Entrar</button>
-      <button id="registerBtn">Cadastrar</button>
-    </div>
-
-    <div id="chatArea">
-      <button id="logoutBtn">Sair</button>
-      <button id="toggleDark">🌙 Alternar modo escuro</button>
-      <div id="status"></div>
-
-      <div class="chatBody">
-        <div id="userList"></div>
-        <div id="chatContent">
-          <div id="chatHeader">Selecione um contato</div>
-          <input id="searchMsg" type="text" placeholder="🔍 Buscar mensagem..." />
-          <div id="messages"></div>
-          <div id="inputArea">
-            <input id="msgInput" type="text" placeholder="Digite uma mensagem..." />
-            <button id="emojiBtn">😊</button>
-            <button id="sendBtn">Enviar</button>
-          </div>
-        </div>
+<!-- Chat modal -->
+<div id="chatModal">
+  <div id="chatBox">
+    <div id="chatHeader">
+      <span id="chatTitle">Conversa</span>
+      <div>
+        <button id="closeModal" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button>
       </div>
     </div>
+
+    <div id="messages"></div>
+    <div id="typingIndicator"></div>
+
+    <div id="inputArea">
+      <button id="emojiBtn" class="icon" title="Emoji">😊</button>
+      <input type="file" id="imageInput" accept="image/*" style="display:none"/>
+      <button id="imageBtn" class="icon" title="Enviar imagem">📷</button>
+      <input type="text" id="msgInput" placeholder="Digite uma mensagem..." />
+      <button id="sendBtn" class="icon" title="Enviar">📩</button>
+    </div>
+
+    <div id="emojiPicker"></div>
   </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      doc,
-      setDoc,
-      getDoc,
-      getDocs,
-      updateDoc,
-      onSnapshot,
-      serverTimestamp,
-      increment
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script type="module">
+/* ========== Imports ========== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, setDoc, updateDoc, getDoc, onSnapshot,
+  getDocs, arrayUnion, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
-      authDomain: "cursos-6f950.firebaseapp.com",
-      projectId: "cursos-6f950",
-      storageBucket: "cursos-6f950.appspot.com",
-      messagingSenderId: "146131122545",
-      appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
-    };
+/* ========== Firebase Config (sua config) ========== */
+const firebaseConfig = {
+  apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
+  authDomain: "cursos-6f950.firebaseapp.com",
+  projectId: "cursos-6f950",
+  storageBucket: "cursos-6f950.appspot.com",
+  messagingSenderId: "146131122545",
+  appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-    const emailInput = document.getElementById("email");
-    const passInput = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const registerBtn = document.getElementById("registerBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const toggleDark = document.getElementById("toggleDark");
-    const emojiBtn = document.getElementById("emojiBtn");
-    const searchMsg = document.getElementById("searchMsg");
-    const msgInput = document.getElementById("msgInput");
-    const sendBtn = document.getElementById("sendBtn");
-    const userListDiv = document.getElementById("userList");
-    const messagesDiv = document.getElementById("messages");
-    const chatHeader = document.getElementById("chatHeader");
-    const statusEl = document.getElementById("status");
-    const authArea = document.getElementById("authArea");
-    const chatArea = document.getElementById("chatArea");
+/* ========== Elements ========== */
+const contactsList = document.getElementById("contactsList");
+const searchInput = document.getElementById("searchInput");
+const chatModal = document.getElementById("chatModal");
+const chatTitle = document.getElementById("chatTitle");
+const closeModal = document.getElementById("closeModal");
+const messagesDiv = document.getElementById("messages");
+const typingIndicator = document.getElementById("typingIndicator");
+const msgInput = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
+const emojiBtn = document.getElementById("emojiBtn");
+const emojiPicker = document.getElementById("emojiPicker");
+const imageBtn = document.getElementById("imageBtn");
+const imageInput = document.getElementById("imageInput");
 
-    let currentUser = null;
-    let selectedUser = null;
-    let unsubscribe = null;
+let currentUser = null;
+let selectedContact = null;
+let unsubscribeMessages = null;
+let pendingImageBase64 = null;
 
-    loginBtn.onclick = async () => {
-      try {
-        await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
-      } catch (e) {
-        alert("Erro ao entrar: " + e.message);
+/* ========== Quick login for testing (change/remove for production) ========== */
+// Remove or change below in production. Here it facilitates testing.
+signInWithEmailAndPassword(auth, "teste@teste.com", "123456").catch(err => {
+  console.warn("Login automático de teste falhou (ignore se usar outro login):", err.message);
+});
+
+/* ========== Auth state ========== */
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    // ensure user doc
+    await setDoc(doc(db, "users", user.uid), { email: user.email, lastActive: serverTimestamp() }, { merge: true });
+    await loadContacts();
+  } else {
+    currentUser = null;
+    // if not logged, you should implement login UI (omitted here for brevity)
+    console.log("Usuário não autenticado - implemente fluxo de login.");
+  }
+});
+
+/* ========== Load contacts ========== */
+async function loadContacts() {
+  const snap = await getDocs(collection(db, "users"));
+  contactsList.innerHTML = "";
+  snap.forEach(docSnap => {
+    const u = docSnap.data();
+    if (!u || !u.uid) return;
+    if (currentUser && u.uid === currentUser.uid) return;
+    const el = document.createElement("div");
+    el.className = "contact";
+    const color = stringToColor(u.email || u.uid);
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">${(u.email||"U")[0].toUpperCase()}</div>
+        <div>
+          <div class="contact-name">${u.email || u.uid}</div>
+          <div style="font-size:12px;color:#666;">${u.lastActive ? (isOnline(u.lastActive.toDate()) ? 'Online' : 'Offline') : ''}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;">
+        <div class="notification" style="display:none;"></div>
+      </div>`;
+    el.dataset.uid = u.uid;
+    el.onclick = () => openChat(u, el);
+    contactsList.appendChild(el);
+
+    // start monitoring unreads and push for this contact
+    monitorUnreadMessages(u.uid, el.querySelector(".notification"), u.email || u.uid);
+  });
+}
+
+/* ========== Monitor unread + push ========== */
+function monitorUnreadMessages(otherUid, notifEl, otherEmail) {
+  const chatId = getChatId(currentUser.uid, otherUid);
+  const chatRef = doc(db, "chats", chatId);
+  onSnapshot(chatRef, (snap) => {
+    if (!snap.exists()) { notifEl.style.display = "none"; return; }
+    const data = snap.data();
+    const msgs = data.messages || [];
+    // simple unread: all messages from otherUid
+    const unread = msgs.filter(m => m.from === otherUid);
+    notifEl.style.display = (unread.length && (!selectedContact || selectedContact.uid !== otherUid)) ? "inline-block" : "none";
+
+    // push notification with preview
+    if (unread.length && (!selectedContact || selectedContact.uid !== otherUid)) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        const last = unread[unread.length - 1];
+        const preview = last.text ? (last.text.length > 60 ? last.text.slice(0,60)+"…" : last.text) : (last.image ? "🖼️ Imagem" : "Nova mensagem");
+        new Notification("Nova mensagem de " + otherEmail, { body: preview });
       }
-    };
+    }
+  });
+}
 
-    registerBtn.onclick = async () => {
-      try {
-        const userCred = await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
-        const[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/RTPorfirio/Carranca/tree/17488c2e139ffb19b9c44df95df7458a1a5bb090/index.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054&citationId=1 "github.com")
-const user = userCred.user;
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          email: user.email
-        });
-      } catch (e) {
-        alert("Erro ao cadastrar: " + e.message);
+/* ========== Open / listen chat ========== */
+function openChat(user, contactEl) {
+  selectedContact = user;
+  chatTitle.textContent = "Conversa com: " + (user.email || user.uid);
+  chatModal.style.display = "flex";
+  messagesDiv.innerHTML = "";
+  typingIndicator.textContent = "";
+  // hide notification
+  const notif = contactEl.querySelector(".notification");
+  if (notif) notif.style.display = "none";
+  listenMessages(user);
+}
+
+/* close modal */
+closeModal.onclick = () => { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; };
+window.onclick = (e) => { if (e.target === chatModal) { chatModal.style.display = "none"; if (unsubscribeMessages) unsubscribeMessages(); selectedContact = null; } };
+
+/* ========== Listen messages (document single) ========== */
+function listenMessages(user) {
+  if (unsubscribeMessages) unsubscribeMessages();
+  const chatId = getChatId(currentUser.uid, user.uid);
+  const chatRef = doc(db, "chats", chatId);
+  unsubscribeMessages = onSnapshot(chatRef, (snap) => {
+    messagesDiv.innerHTML = "";
+    if (!snap.exists()) return;
+    const data = snap.data();
+    const msgs = data.messages || [];
+    msgs.forEach(msg => {
+      const mEl = document.createElement("div");
+      mEl.className = "message " + (msg.from === currentUser.uid ? "sent" : "received");
+      if (msg.text) {
+        const p = document.createElement("div");
+        p.textContent = msg.text;
+        mEl.appendChild(p);
       }
-    };
-
-    logoutBtn.onclick = async () => {
-      await signOut(auth);
-    };
-
-    toggleDark.onclick = () => {
-      document.body.classList.toggle("dark-mode");
-    };
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        authArea.style.display = "none";
-        chatArea.style.display = "block";
-        statusEl.textContent = `Conectado como: ${user.email}`;
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          email: user.email
-        }, { merge: true });
-        carregarUsuarios();
-      } else {
-        authArea.style.display = "block";
-        chatArea.style.display = "none";
+      if (msg.image) {
+        const img = document.createElement("img");
+        img.src = msg.image;
+        img.alt = "imagem";
+        img.style.maxWidth = "320px";
+        img.style.borderRadius = "8px";
+        mEl.appendChild(img);
       }
+      if (msg.timestamp) {
+        const t = document.createElement("div");
+        t.style.fontSize = "11px";
+        t.style.color = "#666";
+        const d = (msg.timestamp && msg.timestamp.toDate) ? msg.timestamp.toDate() : (msg.timestamp ? new Date(msg.timestamp) : new Date());
+        t.textContent = d.toLocaleString();
+        mEl.appendChild(t);
+      }
+      messagesDiv.appendChild(mEl);
     });
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-    async function carregarUsuarios() {
-      const cached = localStorage.getItem("userList");
-      if (cached) {
-        renderizarUsuarios(JSON.parse(cached));
-        return;
-      }
+    // typing indicator reading
+    if (data.typing && data.typing[user.uid]) typingIndicator.textContent = "digitando...";
+    else typingIndicator.textContent = "";
+  });
+}
 
-      const usersRef = collection(db, "users");
-      const snapshot = await getDocs(usersRef);
-      const lista = [];
+/* ========== Send message (text or image) ========== */
+async function sendMessage({ text = "", image = null }) {
+  if (!selectedContact) return alert("Selecione um contato.");
+  const chatId = getChatId(currentUser.uid, selectedContact.uid);
+  const chatRef = doc(db, "chats", chatId);
+  const snap = await getDoc(chatRef);
+  if (!snap.exists()) {
+    await setDoc(chatRef, { messages: [], typing: {} });
+  }
+  const messageObj = {
+    from: currentUser.uid,
+    text: text || "",
+    image: image || null,
+    timestamp: serverTimestamp()
+  };
+  await updateDoc(chatRef, { messages: arrayUnion(messageObj), ["typing." + currentUser.uid]: false });
+}
 
-      snapshot.forEach(docSnap => {
-        const user = docSnap.data();
-        if (user.uid !== currentUser.uid) lista.push(user);
-      });
+/* UI send handlers */
+sendBtn.onclick = async () => {
+  const text = msgInput.value.trim();
+  if (!text && !pendingImageBase64) return;
+  await sendMessage({ text, image: pendingImageBase64 });
+  msgInput.value = "";
+  pendingImageBase64 = null;
+};
 
-      localStorage.setItem("userList", JSON.stringify(lista));
-      renderizarUsuarios(lista);
-    }
+/* Image upload: convert to base64 (quick prototype) */
+imageBtn.onclick = () => imageInput.click();
+imageInput.onchange = () => {
+  const file = imageInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingImageBase64 = reader.result; // data URL
+    msgInput.value = "[imagem selecionada]";
+  };
+  reader.readAsDataURL(file);
+};
 
-    async function renderizarUsuarios(lista) {
-      userListDiv.innerHTML = "";
-      for (const user of lista) {
-        const chatId = getChatId(currentUser.uid, user.uid);
-        const chatDoc = await getDoc(doc(db, "chats", chatId));
-        const unread = chatDoc.exists() ? chatDoc.data().unread?.[currentUser.uid] || 0 : 0;
+/* ========== Emoji picker ========== */
+const EMOJIS = ["😀","😁","😂","🤣","😍","😘","😎","😜","🤔","😴","🔥","💯","👍","🙏"];
+emojiBtn.onclick = () => {
+  emojiPicker.style.display = emojiPicker.style.display === "block" ? "none" : "block";
+  if (emojiPicker.style.display === "block") renderEmojis();
+};
+function renderEmojis() {
+  emojiPicker.innerHTML = "";
+  EMOJIS.forEach(e => {
+    const s = document.createElement("span");
+    s.className = "emoji";
+    s.textContent = e;
+    s.onclick = () => { msgInput.value += e; emojiPicker.style.display = "none"; triggerTyping(); };
+    emojiPicker.appendChild(s);
+  });
+}
 
-        const div = document.createElement("div");
-        div.textContent = `${user.email} ${unread > 0 ? `(${unread})` : ""}`;
-        div.onclick = () => abrirChat(user);
-        userListDiv.appendChild(div);
-      }
-    }
+/* ========== Typing indicator update ========== */
+let typingTimer = null;
+msgInput.addEventListener("input", () => {
+  triggerTyping();
+});
+async function triggerTyping() {
+  if (!selectedContact) return;
+  const chatId = getChatId(currentUser.uid, selectedContact.uid);
+  const chatRef = doc(db, "chats", chatId);
+  const snap = await getDoc(chatRef);
+  if (!snap.exists()) await setDoc(chatRef, { messages: [], typing: {} });
+  await updateDoc(chatRef, { ["typing." + currentUser.uid]: true });
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(async () => {
+    await updateDoc(chatRef, { ["typing." + currentUser.uid]: false });
+  }, 1500);
+}
 
-    function getChatId(uid1, uid2) {
-      return [uid1, uid2].sort().join("_");
-    }
+/* ========== Search contacts ========== */
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.trim().toLowerCase();
+  document.querySelectorAll(".contact").forEach(c => {
+    const name = c.querySelector(".contact-name").textContent.toLowerCase();
+    c.style.display = name.includes(q) ? "flex" : "none";
+  });
+});
 
-    async function abrirChat(user) {
-      selectedUser = user;
-      chatHeader.textContent = "Conversando com: " + user.email;
-      messagesDiv.innerHTML = "";
-      if (unsubscribe) unsubscribe();
+/* ========== Helpers ========== */
+function getChatId(a,b){ return [a,b].sort().join("_"); }
+function stringToColor(str){
+  let hash=0; for(let i=0;i<str.length;i++) hash = str.charCodeAt(i) + ((hash<<5)-hash);
+  let color="#"; for(let i=0;i<3;i++){ const val = (hash >> (i*8)) & 0xFF; color += ("00"+val.toString(16)).slice(-2); } return color;
+}
+function isOnline(date){
+  try{
+    const diff = (Date.now() - date.getTime())/1000;
+    return diff < 30;
+  }catch(e){ return false; }
+}
 
-      const chatId = getChatId(currentUser.uid, user.uid);
-      const chatDocRef = doc(db, "chats", chatId);
+/* ========== Notifications permission ========== */
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission().then(p => console.log("Permissão notificação:", p));
+}
 
-      unsubscribe = onSnapshot(chatDocRef, async (docSnap) => {
-        messagesDiv.innerHTML = "";
-        const data = docSnap.data();
-        if (data && data.messages) {
-          const sortedKeys = Object.keys(data.messages).sort();
-          sortedKeys.forEach(key => {
-            const msg = data.messages[key];
-            const div = document.createElement("div");
-            div.classList.add("message", msg.f === currentUser.uid ? "sent" : "received");
-            div.textContent = msg.m;
-            messagesDiv.appendChild(div);
-          });
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-          chatHeader.textContent = `Conversando com: ${user.email} (${sortedKeys.length} mensagens)`;
-
-          await updateDoc(chatDocRef, {
-            [`unread.${currentUser.uid}`]: 0
-          });
-        }
-      });
-    }
-
-    sendBtn.onclick = async () => {
-      if (!selectedUser) return alert("Selecione um contato!");
-      const text = msgInput.value.trim();
-      if (!text) return;
-
-      const chatId = getChatId(currentUser.uid, selectedUser.uid);
-      const chatDocRef = doc(db, "chats", chatId);
-      const timestampKey = Date.now().toString();
-
-      const newMessage = {
-        f: currentUser.uid,
-        t: selectedUser.uid,
-        m: text,
-        ts: serverTimestamp()
-      };
-
-      await updateDoc(chatDocRef, {
-        [`messages.${timestampKey}`]: newMessage,
-        [`unread.${selectedUser.uid}`]: increment(1)
-      });
-
-      msgInput.value = "";
-    };
-
-    emojiBtn.onclick = () => {
-      const emojis = ["😀", "😂", "😍", "👍", "🙏", "🎉", "😎", "😢"];
-      const picker = document.createElement("div");
-      picker.style.position = "absolute";
-      picker.style.bottom = "60px";
-      picker.style.right = "20px";
-      picker.style.background = "#fff";
-      picker.style.border = "1px solid #ccc";
-      picker.style.padding = "10px";
-      picker.style.borderRadius = "10px";
-      picker.style.boxShadow = "0 0 10px #aaa";
-      picker.style.zIndex = "1000";
-
-      emojis.forEach(emoji => {
-        const btn = document.createElement("button");
-        btn.textContent = emoji;
-        btn.style.fontSize = "20px";
-        btn.style.margin = "5px";
-        btn.onclick = () => {
-          msgInput.value += emoji;
-          document.body.removeChild(picker);
-        };
-        picker.appendChild(btn);
-      });
-
-      document.body.appendChild(picker);
-    };
-
-    searchMsg.oninput = (e) => {
-      const term = e.target.value.toLowerCase();
-      const allMsgs = messagesDiv.querySelectorAll(".message");
-      allMsgs.forEach(msg => {
-        msg.style.display = msg.textContent.toLowerCase().includes(term) ? "block" : "none";
-      });
-    };
-  </script>
+/* ========== End ========== */
+</script>
 </body>
   </html>
