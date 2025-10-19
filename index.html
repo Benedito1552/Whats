@@ -14,7 +14,7 @@ button { background:#128C7E; color:white; cursor:pointer; }
 #userList { margin-top:10px; border-top:1px solid #ccc; }
 .user { background:white; padding:10px; border-bottom:1px solid #ddd; cursor:pointer; position:relative; }
 .user:hover { background:#eaeaea; }
-.badge { position:absolute; right:10px; top:12px; background:red; color:white; padding:3px 7px; border-radius:50%; font-size:12px; }
+.badge { position:absolute; right:10px; top:12px; background:red; color:white; padding:3px 7px; border-radius:50%; font-size:12px; display:none; }
 #chatModal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; }
 #chatBox { background:white; width:90%; max-width:400px; height:80%; border-radius:10px; display:flex; flex-direction:column; }
 #messages { flex:1; padding:10px; overflow-y:auto; }
@@ -74,7 +74,7 @@ button { background:#128C7E; color:white; cursor:pointer; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, updateDoc, arrayUnion, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -134,13 +134,28 @@ document.getElementById('signupBtn').onclick = async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
   const role = roleSelect.value;
-  const vinculos = Array.from(vinculoSelect.selectedOptions).map(o=>o.value);
+  const selectedVinculos = Array.from(vinculoSelect.selectedOptions).map(o=>o.value);
   if(!name||!email||!password) return alert("Preencha todos os campos!");
   try {
     const userCred = await createUserWithEmailAndPassword(auth,email,password);
     await setDoc(doc(db,"users",userCred.user.uid),{
-      nome:name,email,funcao:role,vinculos,createdAt:Date.now()
+      nome:name,email,funcao:role,vinculos:selectedVinculos,createdAt:Date.now()
     });
+
+    // 🔹 Sincronizar vínculos bidirecionais
+    if(role==="cliente"){
+      for(const vid of selectedVinculos){
+        const vRef=doc(db,"users",vid);
+        await updateDoc(vRef,{vinculos:arrayUnion(userCred.user.uid)});
+      }
+    }
+    if(role==="vendedor"){
+      for(const cid of selectedVinculos){
+        const cRef=doc(db,"users",cid);
+        await updateDoc(cRef,{vinculos:arrayUnion(userCred.user.uid)});
+      }
+    }
+
     alert("Usuário cadastrado!");
   } catch(e){ alert(e.message); }
 };
@@ -162,6 +177,7 @@ onAuthStateChanged(auth,async(user)=>{
     chatContainer.style.display="block";
     const snap = await getDoc(doc(db,"users",user.uid));
     currentUserRole = snap.data().funcao;
+    currentUser.vinculos = snap.data().vinculos || [];
     loadUsers();
     if(Notification.permission!=="granted") Notification.requestPermission();
   } else{
@@ -181,8 +197,8 @@ async function loadUsers(){
 
     if(currentUserRole==="master") show=true;
     else if(currentUserRole==="gerente") show=currentUser.vinculos?.includes(uid) || user.funcao==="cliente";
-    else if(currentUserRole==="vendedor") show=currentUser.vinculos?.includes(uid);
-    else if(currentUserRole==="cliente") show=currentUser.vinculos?.includes(uid);
+    else if(currentUserRole==="vendedor") show=currentUser.vinculos?.includes(uid) || user.vinculos?.includes(currentUser.uid);
+    else if(currentUserRole==="cliente") show=currentUser.vinculos?.includes(uid) || user.vinculos?.includes(currentUser.uid);
 
     if(show) addUserToList(uid,user);
   });
@@ -193,7 +209,7 @@ function addUserToList(uid,user){
   userDiv.className="user";
   userDiv.textContent=user.email;
   const badge=document.createElement("span");
-  badge.className="badge"; badge.style.display="none";
+  badge.className="badge";
   userDiv.appendChild(badge);
 
   const chatId=[currentUser.uid,uid].sort().join("_");
@@ -231,8 +247,8 @@ searchBtn.onclick=async ()=>{
       const uid=docSnap.id;
       if(currentUserRole==="master") show=true;
       else if(currentUserRole==="gerente") show=currentUser.vinculos?.includes(uid) || u.funcao==="cliente";
-      else if(currentUserRole==="vendedor") show=currentUser.vinculos?.includes(uid);
-      else if(currentUserRole==="cliente") show=currentUser.vinculos?.includes(uid);
+      else if(currentUserRole==="vendedor") show=currentUser.vinculos?.includes(uid) || u.vinculos?.includes(currentUser.uid);
+      else if(currentUserRole==="cliente") show=currentUser.vinculos?.includes(uid) || u.vinculos?.includes(currentUser.uid);
       if(show) addUserToList(uid,u);
     }
   });
@@ -286,4 +302,4 @@ sendForm.addEventListener("submit",async(e)=>{
 window.onclick=(e)=>{ if(e.target===chatModal) chatModal.style.display="none"; };
 </script>
 </body>
-  </html>
+    </html>
