@@ -1,105 +1,170 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mini WhatsApp</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    margin: 0;
-  }
-  .container {
-    max-width: 800px;
-    margin: 30px auto;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #ccc;
-    overflow: hidden;
-  }
-  header {
-    background: #6200ea;
-    color: white;
-    text-align: center;
-    padding: 15px;
-  }
-  #authArea, #chatArea {
-    padding: 20px;
-  }
-  input {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-  }
-  button {
-    padding: 10px 15px;
-    background: #6200ea;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 6px;
-  }
-  button:hover {
-    background: #4a00b5;
-  }
-  #userList {
-    width: 30%;
-    float: left;
-    border-right: 1px solid #ddd;
-    height: 400px;
-    overflow-y: auto;
-  }
-  #userList div {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-  }
-  #userList div:hover {
-    background: #f0f0f0;
-  }
-  #messages {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    height: 350px;
-  }
-  .message {
-    padding: 8px;
-    border-radius: 10px;
-    margin: 5px 0;
-    max-width: 70%;
-  }
-  .sent {
-    background: #dcf8c6;
-    margin-left: auto;
-  }
-  .received {
-    background: #eee;
-    margin-right: auto;
-  }
-  #chatContent {
-    width: 70%;
-    float: right;
-    display: flex;
-    flex-direction: column;
-  }
-  #inputArea {
-    display: flex;
-    border-top: 1px solid #ddd;
-  }
-  #msgInput {
-    flex: 1;
-    border: none;
-    padding: 10px;
-  }
-  #status {
-    text-align: center;
-    margin-top: 10px;
-    color: #555;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini WhatsApp Telegram Style</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #e5e5e5;
+      margin: 0;
+    }
+    body.dark-mode {
+      background: #121212;
+      color: #e0e0e0;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .dark-mode .container {
+      background: #1e1e1e;
+      box-shadow: none;
+    }
+    header {
+      background: #0088cc;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 20px;
+    }
+    #authArea, #chatArea {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+    #chatArea {
+      display: none;
+    }
+    .chatBody {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      border-top: 1px solid #ddd;
+    }
+    #userList {
+      width: 280px;
+      background: #f7f7f7;
+      border-right: 1px solid #ddd;
+      overflow-y: auto;
+    }
+    .dark-mode #userList {
+      background: #1a1a1a;
+      border-color: #333;
+    }
+    #userList div {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    #userList div:hover {
+      background: #e0e0e0;
+    }
+    .dark-mode #userList div:hover {
+      background: #333;
+    }
+    #chatContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    .dark-mode #chatContent {
+      background: #1e1e1e;
+    }
+    #chatHeader {
+      padding: 15px;
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+      background: #f9f9f9;
+    }
+    .dark-mode #chatHeader {
+      background: #2a2a2a;
+      border-color: #333;
+    }
+    #searchMsg {
+      padding: 10px;
+      border: none;
+      border-bottom: 1px solid #ccc;
+    }
+    #messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      padding: 10px 15px;
+      border-radius: 20px;
+      margin: 5px 0;
+      max-width: 70%;
+      position: relative;
+    }
+    .sent {
+      background: #dcf8c6;
+      align-self: flex-end;
+    }
+    .received {
+      background: #eee;
+      align-self: flex-start;
+    }
+    .dark-mode .message.sent {
+      background: #2e7d32;
+      color: white;
+    }
+    .dark-mode .message.received {
+      background: #333;
+      color: white;
+    }
+    #inputArea {
+      display: flex;
+      border-top: 1px solid #ddd;
+      padding: 10px;
+    }
+    #msgInput {
+      flex: 1;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 20px;
+      background: #f0f0f0;
+      margin-right: 10px;
+    }
+    .dark-mode #msgInput {
+      background: #2a2a2a;
+      color: white;
+    }
+    button {
+      padding: 10px 15px;
+      background: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #006fa1;
+    }
+    .dark-mode button {
+      background: #1976d2;
+    }
+    .dark-mode button:hover {
+      background: #1565c0;
+    }
+    #status {
+      text-align: center;
+      margin-top: 10px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -113,210 +178,258 @@
       <button id="registerBtn">Cadastrar</button>
     </div>
 
-    <div id="chatArea" style="display:none;">
+    <div id="chatArea">
       <button id="logoutBtn">Sair</button>
+      <button id="toggleDark">🌙 Alternar modo escuro</button>
       <div id="status"></div>
 
-      <div id="userList"></div>
-      <div id="chatContent">
-        <h3 id="chatWith">Selecione um contato</h3>
-        <div id="messages"></div>
-        <div id="inputArea">
-          <input id="msgInput" type="text" placeholder="Digite uma mensagem..." />
-          <button id="sendBtn">Enviar</button>
+      <div class="chatBody">
+        <div id="userList"></div>
+        <div id="chatContent">
+          <div id="chatHeader">Selecione um contato</div>
+          <input id="searchMsg" type="text" placeholder="🔍 Buscar mensagem..." />
+          <div id="messages"></div>
+          <div id="inputArea">
+            <input id="msgInput" type="text" placeholder="Digite uma mensagem..." />
+            <button id="emojiBtn">😊</button>
+            <button id="sendBtn">Enviar</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import {
-    getFirestore,
-    collection,
-    doc,
-    setDoc,
-    getDoc,
-    getDocs,
-    updateDoc,
-    onSnapshot,
-    serverTimestamp,
-    increment
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      getDoc,
+      getDocs,
+      updateDoc,
+      onSnapshot,
+      serverTimestamp,
+      increment
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
-    authDomain: "cursos-6f950.firebaseapp.com",
-    projectId: "cursos-6f950",
-    storageBucket: "cursos-6f950.appspot.com",
-    messagingSenderId: "146131122545",
-    appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const authArea = document.getElementById("authArea");
-  const chatArea = document.getElementById("chatArea");
-  const emailInput = document.getElementById("email");
-  const passInput = document.getElementById("password");
-  const loginBtn = document.getElementById("loginBtn");
-  const registerBtn = document.getElementById("registerBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const userListDiv = document.getElementById("userList");
-  const messagesDiv = document.getElementById("messages");
-  const sendBtn = document.getElementById("sendBtn");
-  const msgInput = document.getElementById("msgInput");
-  const chatWith = document.getElementById("chatWith");
-  const statusEl = document.getElementById("status");
-
-  let currentUser = null;
-  let selectedUser = null;
-  let unsubscribe = null;
-
-  loginBtn.onclick = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
-    } catch (e) {
-      alert("Erro ao entrar: " + e.message);
-    }
-  };
-
-  registerBtn.onclick = async () => {
-    try {
-      const userCred = await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
-      const user = userCred.user;
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: user.email
-      });
-    } catch (e) {
-      alert("Erro ao cadastrar: " + e.message);
-    }
-  };
-
-  logoutBtn.onclick = async () => {
-    await signOut(auth);
-  };
-
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUser = user;
-      authArea.style.display = "none";
-      chatArea.style.display = "block";
-      statusEl.textContent = `Conectado como: ${user.email}`;
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: user.email
-      }, { merge: true });
-      carregarUsuarios();
-    } else {
-      authArea.style.display = "block";
-      chatArea.style.display = "none";
-    }
-  });
-
-  async function carregarUsuarios() {
-    const cached = localStorage.getItem("userList");
-    if (cached) {
-      renderizarUsuarios(JSON.parse(cached));
-      return;
-    }
-
-    const usersRef = collection(db, "users");
-    const snapshot = await getDocs(usersRef);
-    const lista = [];
-
-    snapshot.forEach(docSnap => {
-      const user = docSnap.data();
-      if (user.uid !== currentUser.uid) lista.push(user);
-    });
-
-    localStorage.setItem("userList", JSON.stringify(lista));
-    renderizarUsuarios(lista);
-  }
-
-  async function renderizarUsuarios(lista) {
-    userListDiv.innerHTML = "";
-    for (const user of lista) {
-      const chatId = getChatId(currentUser.uid, user.uid);
-      const chatDoc = await getDoc(doc(db, "chats", chatId));
-      const unread = chatDoc.exists() ? chatDoc.data().unread?.[currentUser.uid] || 0 : 0;
-
-      const div = document.createElement("div");
-      div.textContent = `${user.email} ${unread > 0 ? `(${unread})` : ""}`;
-      div.onclick = () => abrirChat(user);
-      userListDiv.appendChild(div);
-    }
-  }
-
-  function getChatId(uid1, uid2) {
-    return [uid1, uid2].sort().join("_");
-  }
-
-  async function abrirChat(user) {
-    selectedUser = user;
-    chatWith.textContent = "Conversando com: " + user.email;
-    messagesDiv.innerHTML = "";
-    if (unsubscribe) unsubscribe();
-
-    const chatId = getChatId(currentUser.uid, user.uid);
-    const chatDocRef = doc(db, "chats", chatId);
-
-    unsubscribe = onSnapshot(chatDocRef, async (docSnap) => {
-      messagesDiv.innerHTML = "";
-      const data = docSnap.data();
-      if (data && data.messages) {
-        const sortedKeys = Object.keys(data.messages).sort();
-        sortedKeys.forEach(key => {
-          const msg = data.messages[key];
-          const div = document.createElement("div");
-          div.classList.add("message", msg.f === currentUser.uid ? "sent" : "received");
-          div.textContent = msg.m;
-          messagesDiv.appendChild(div);
-        });
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        chatWith.textContent = `Conversando com: ${user.email} (${sortedKeys.length} mensagens)`;
-
-        // Zera contador de não lidas
-        await updateDoc(chatDocRef, {
-          [`unread.${currentUser.uid}`]: 0
-        });
-      }
-    });
-  }
-
-  sendBtn.onclick = async () => {
-    if (!selectedUser) return alert("Selecione um contato!");
-    const text = msgInput.value.trim();
-    if (!text) return;
-
-    const chatId = getChatId(currentUser.uid, selectedUser.uid);
-    const chatDocRef = doc(db, "chats", chatId);
-    const timestampKey = Date.now().toString();
-
-    const newMessage = {
-      f: currentUser.uid,
-      t: selectedUser.uid,
-      m: text,
-      ts: serverTimestamp()
+    const firebaseConfig = {
+      apiKey: "AIzaSyC0dUhymi72gkug-oo0-xqqBEtgvlIgvY0",
+      authDomain: "cursos-6f950.firebaseapp.com",
+      projectId: "cursos-6f950",
+      storageBucket: "cursos-6f950.appspot.com",
+      messagingSenderId: "146131122545",
+      appId: "1:146131122545:web:043f8207f457ad5b7f5ed0"
     };
 
-    await updateDoc(chatDocRef, {
-      [`messages.${timestampKey}`]: newMessage,
-      [`unread.${selectedUser.uid}`]: increment(1)
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const emailInput = document.getElementById("email");
+    const passInput = document.getElementById("password");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const toggleDark = document.getElementById("toggleDark");
+    const emojiBtn = document.getElementById("emojiBtn");
+    const searchMsg = document.getElementById("searchMsg");
+    const msgInput = document.getElementById("msgInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const userListDiv = document.getElementById("userList");
+    const messagesDiv = document.getElementById("messages");
+    const chatHeader = document.getElementById("chatHeader");
+    const statusEl = document.getElementById("status");
+    const authArea = document.getElementById("authArea");
+    const chatArea = document.getElementById("chatArea");
+
+    let currentUser = null;
+    let selectedUser = null;
+    let unsubscribe = null;
+
+    loginBtn.onclick = async () => {
+      try {
+        await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
+      } catch (e) {
+        alert("Erro ao entrar: " + e.message);
+      }
+    };
+
+    registerBtn.onclick = async () => {
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
+        const[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/RTPorfirio/Carranca/tree/17488c2e139ffb19b9c44df95df7458a1a5bb090/index.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054&citationId=1 "github.com")
+const user = userCred.user;
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email
+        });
+      } catch (e) {
+        alert("Erro ao cadastrar: " + e.message);
+      }
+    };
+
+    logoutBtn.onclick = async () => {
+      await signOut(auth);
+    };
+
+    toggleDark.onclick = () => {
+      document.body.classList.toggle("dark-mode");
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        authArea.style.display = "none";
+        chatArea.style.display = "block";
+        statusEl.textContent = `Conectado como: ${user.email}`;
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email
+        }, { merge: true });
+        carregarUsuarios();
+      } else {
+        authArea.style.display = "block";
+        chatArea.style.display = "none";
+      }
     });
 
-    msgInput.value = "";
-  };
-</script>
+    async function carregarUsuarios() {
+      const cached = localStorage.getItem("userList");
+      if (cached) {
+        renderizarUsuarios(JSON.parse(cached));
+        return;
+      }
+
+      const usersRef = collection(db, "users");
+      const snapshot = await getDocs(usersRef);
+      const lista = [];
+
+      snapshot.forEach(docSnap => {
+        const user = docSnap.data();
+        if (user.uid !== currentUser.uid) lista.push(user);
+      });
+
+      localStorage.setItem("userList", JSON.stringify(lista));
+      renderizarUsuarios(lista);
+    }
+
+    async function renderizarUsuarios(lista) {
+      userListDiv.innerHTML = "";
+      for (const user of lista) {
+        const chatId = getChatId(currentUser.uid, user.uid);
+        const chatDoc = await getDoc(doc(db, "chats", chatId));
+        const unread = chatDoc.exists() ? chatDoc.data().unread?.[currentUser.uid] || 0 : 0;
+
+        const div = document.createElement("div");
+        div.textContent = `${user.email} ${unread > 0 ? `(${unread})` : ""}`;
+        div.onclick = () => abrirChat(user);
+        userListDiv.appendChild(div);
+      }
+    }
+
+    function getChatId(uid1, uid2) {
+      return [uid1, uid2].sort().join("_");
+    }
+
+    async function abrirChat(user) {
+      selectedUser = user;
+      chatHeader.textContent = "Conversando com: " + user.email;
+      messagesDiv.innerHTML = "";
+      if (unsubscribe) unsubscribe();
+
+      const chatId = getChatId(currentUser.uid, user.uid);
+      const chatDocRef = doc(db, "chats", chatId);
+
+      unsubscribe = onSnapshot(chatDocRef, async (docSnap) => {
+        messagesDiv.innerHTML = "";
+        const data = docSnap.data();
+        if (data && data.messages) {
+          const sortedKeys = Object.keys(data.messages).sort();
+          sortedKeys.forEach(key => {
+            const msg = data.messages[key];
+            const div = document.createElement("div");
+            div.classList.add("message", msg.f === currentUser.uid ? "sent" : "received");
+            div.textContent = msg.m;
+            messagesDiv.appendChild(div);
+          });
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          chatHeader.textContent = `Conversando com: ${user.email} (${sortedKeys.length} mensagens)`;
+
+          await updateDoc(chatDocRef, {
+            [`unread.${currentUser.uid}`]: 0
+          });
+        }
+      });
+    }
+
+    sendBtn.onclick = async () => {
+      if (!selectedUser) return alert("Selecione um contato!");
+      const text = msgInput.value.trim();
+      if (!text) return;
+
+      const chatId = getChatId(currentUser.uid, selectedUser.uid);
+      const chatDocRef = doc(db, "chats", chatId);
+      const timestampKey = Date.now().toString();
+
+      const newMessage = {
+        f: currentUser.uid,
+        t: selectedUser.uid,
+        m: text,
+        ts: serverTimestamp()
+      };
+
+      await updateDoc(chatDocRef, {
+        [`messages.${timestampKey}`]: newMessage,
+        [`unread.${selectedUser.uid}`]: increment(1)
+      });
+
+      msgInput.value = "";
+    };
+
+    emojiBtn.onclick = () => {
+      const emojis = ["😀", "😂", "😍", "👍", "🙏", "🎉", "😎", "😢"];
+      const picker = document.createElement("div");
+      picker.style.position = "absolute";
+      picker.style.bottom = "60px";
+      picker.style.right = "20px";
+      picker.style.background = "#fff";
+      picker.style.border = "1px solid #ccc";
+      picker.style.padding = "10px";
+      picker.style.borderRadius = "10px";
+      picker.style.boxShadow = "0 0 10px #aaa";
+      picker.style.zIndex = "1000";
+
+      emojis.forEach(emoji => {
+        const btn = document.createElement("button");
+        btn.textContent = emoji;
+        btn.style.fontSize = "20px";
+        btn.style.margin = "5px";
+        btn.onclick = () => {
+          msgInput.value += emoji;
+          document.body.removeChild(picker);
+        };
+        picker.appendChild(btn);
+      });
+
+      document.body.appendChild(picker);
+    };
+
+    searchMsg.oninput = (e) => {
+      const term = e.target.value.toLowerCase();
+      const allMsgs = messagesDiv.querySelectorAll(".message");
+      allMsgs.forEach(msg => {
+        msg.style.display = msg.textContent.toLowerCase().includes(term) ? "block" : "none";
+      });
+    };
+  </script>
 </body>
-</html>
+  </html>
